@@ -18,41 +18,27 @@ type Scanner struct {
 func main() {
 
 	lines := fileToLines("input.txt")
-	delay := 9
+	delay := 0
+	scanners, maxScanner := initScanners(lines)
+
 	for {
+		step := 0
 		delay++
-		scanners := initScanners(lines)
-		//printState(scanners, 0)
-		for pico := 0; pico < delay; pico++ {
-			for _, scanner := range scanners {
-				scanner.Pos = scanner.Pos + scanner.Direction
-				if scanner.Pos == scanner.Depth || scanner.Pos == -1 {
-					scanner.Direction = scanner.Direction * -1
-					scanner.Pos = scanner.Pos + scanner.Direction
-					scanner.Pos = scanner.Pos + scanner.Direction
-				}
-			}
-			//printState(scanners, pico)
-		}
+		found := false
 
-		//printState(scanners, delay)
+		for i := 0; i <= maxScanner; i++ {
 
-		severity := 0
-		for myPos := 0; myPos < 88; myPos++ {
-			if scanners[myPos] != nil && scanners[myPos].Pos == 0 {
-				severity = 1
+			if scanners[i] == nil || (delay+step)%((scanners[i].Depth*2)-1) != 0 {
+				step++
+				continue
+			} else {
+				found = true
 				break
 			}
-			for _, scanner := range scanners {
-				scanner.Pos = scanner.Pos + scanner.Direction
-				if scanner.Pos == scanner.Depth || scanner.Pos == -1 {
-					scanner.Direction = scanner.Direction * -1
-					scanner.Pos = scanner.Pos + scanner.Direction
-					scanner.Pos = scanner.Pos + scanner.Direction
-				}
-			}
+
 		}
-		if severity == 0 {
+
+		if !found {
 			break
 		}
 
@@ -60,37 +46,21 @@ func main() {
 	fmt.Println(delay)
 
 }
-func printState(scanners map[int]*Scanner, pos int) {
-	fmt.Println(pos)
-	for k, scanner := range scanners {
-
-		fmt.Print(k)
-		fmt.Print(":")
-		for i := 0; i < scanner.Depth; i++ {
-			if scanner.Pos == i {
-				fmt.Print("[X]")
-			} else {
-				fmt.Print("[ ]")
-			}
-		}
-		fmt.Println("")
-
-	}
-	fmt.Println("--------------------------------------------------------------")
-}
-func initScanners(lines []string) map[int]*Scanner {
+func initScanners(lines []string) (map[int]*Scanner, int) {
 	scanners := make(map[int]*Scanner)
-
+	max := 0
 	for _, line := range lines {
 		tokens := strings.Split(line, ":")
 		srange, _ := strconv.Atoi(strings.TrimSpace(tokens[0]))
 		depth, _ := strconv.Atoi(strings.TrimSpace(tokens[1]))
 
 		scanners[srange] = &Scanner{Depth: depth, Direction: 1}
-
+		if srange > max {
+			max = srange
+		}
 	}
 
-	return scanners
+	return scanners, max
 
 }
 func fileToLines(fileName string) []string {
