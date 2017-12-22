@@ -28,7 +28,17 @@ func main() {
 
 		for i := 0; i <= maxScanner; i++ {
 
-			if scanners[i] == nil || (delay+step)%((scanners[i].Depth*2)-1) != 0 {
+			scanner, exists := scanners[i]
+
+			if !exists {
+				step++
+				continue
+			}
+
+			depth := ((scanner.Depth * 2) - 2)
+
+			if (delay+step)%depth != 0 {
+
 				step++
 				continue
 			} else {
