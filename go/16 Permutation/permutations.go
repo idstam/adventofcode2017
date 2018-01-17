@@ -18,7 +18,7 @@ func main() {
 
 	commands := parseCommands(input)
 
-	for i := 0; i < 1000000000; i++ {
+	for i := 0; i < 1000; i++ {
 		for _, command := range commands {
 			command.Execute()
 		}
