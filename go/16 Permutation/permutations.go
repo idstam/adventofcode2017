@@ -1,17 +1,35 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io/ioutil"
+	"log"
+	"os"
+	"runtime/pprof"
 	"strconv"
 	"strings"
 )
 
+var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
+
 var Programs = []string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p"}
+var PrgBuff []string
 
 //var Programs = []string{"a", "b", "c", "d", "e"}
 
 func main() {
+	flag.Parse()
+	if *cpuprofile != "" {
+		f, err := os.Create(*cpuprofile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
+	}
+
+	PrgBuff = make([]string, len(Programs))
 	buf, _ := ioutil.ReadFile("input.txt")
 	data := string(buf)
 	input := strings.Split(data, ",")
@@ -54,15 +72,18 @@ func parseCommands(input []string) []Command {
 func findProgram(nameA, nameB string) (int, int) {
 	retA := -1
 	retB := -1
-
+	foundA := false
+	foundB := false
 	for k, v := range Programs {
 		if v == nameA {
 			retA = k
+			foundA = true
 		}
 		if v == nameB {
 			retB = k
+			foundB = true
 		}
-		if retA > -1 && retB > -1 {
+		if foundA && foundB {
 			break
 		}
 	}
@@ -112,10 +133,27 @@ func (command *SpinCommand) Parse(arg string) {
 	command.num, _ = strconv.Atoi(arg)
 }
 func (command *SpinCommand) Execute() {
+
 	b := Programs[:len(Programs)-command.num]
 	a := Programs[len(Programs)-command.num:]
-
 	Programs = append(a, b...)
+
+	/*
+		dest := 0
+		for i := command.num; i < len(Programs); i++ {
+			PrgBuff[dest] = Programs[i]
+			dest++
+		}
+		dest = command.num
+		for i := 0; i < command.num; i++ {
+			PrgBuff[dest] = Programs[i]
+			dest++
+		}
+		for i := 0; i < len(Programs); i++ {
+			Programs[i] = PrgBuff[i]
+			dest++
+		}
+	*/
 
 }
 
