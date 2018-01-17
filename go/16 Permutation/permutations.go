@@ -7,83 +7,119 @@ import (
 	"strings"
 )
 
-var programs = []string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p"}
+var Programs = []string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p"}
 
-//var programs = []string{"a", "b", "c", "d", "e"}
+//var Programs = []string{"a", "b", "c", "d", "e"}
 
 func main() {
+	buf, _ := ioutil.ReadFile("input.txt")
+	data := string(buf)
+	input := strings.Split(data, ",")
 
-	commands := make(chan string)
-	go parseCommands(commands)
-	receiveCommands(commands)
+	commands := parseCommands(input)
 
-	for _, name := range programs {
+	for i := 0; i < 1000000000; i++ {
+		for _, command := range commands {
+			command.Execute()
+		}
+	}
+
+	for _, name := range Programs {
 		fmt.Print(name)
 	}
 }
 
-func parseCommands(c chan string) {
-	buf, _ := ioutil.ReadFile("input.txt")
-	data := string(buf)
-	commands := strings.Split(data, ",")
-	for _, command := range commands {
-		c <- command
-	}
-	close(c)
+func parseCommands(input []string) []Command {
+	ret := make([]Command, 0)
 
-}
-
-func receiveCommands(c chan string) {
-	for {
-		cmd, ok := <-c
-		if !ok {
-			break
-		}
-		fmt.Println(cmd)
+	for _, cmd := range input {
 		if strings.HasPrefix(cmd, "s") {
-			spin(strings.TrimPrefix(cmd, "s"))
+			command := &SpinCommand{}
+			command.Parse(strings.TrimPrefix(cmd, "s"))
+			ret = append(ret, command)
 		}
 		if strings.HasPrefix(cmd, "x") {
-			exchange(strings.TrimPrefix(cmd, "x"))
+			command := &ExchangeCommand{}
+			command.Parse(strings.TrimPrefix(cmd, "x"))
+			ret = append(ret, command)
 		}
 		if strings.HasPrefix(cmd, "p") {
-			partner(strings.TrimPrefix(cmd, "p"))
-		}
-
-		fmt.Println(programs)
-
-	}
-}
-func partner(arg string) {
-	args := strings.Split(arg, "/")
-
-	a := findProgram(args[0])
-	b := findProgram(args[1])
-	swap := programs[a]
-	programs[a] = programs[b]
-	programs[b] = swap
-}
-func findProgram(name string) int {
-	for k, v := range programs {
-		if v == name {
-			return k
+			command := &PartnerCommand{}
+			command.Parse(strings.TrimPrefix(cmd, "p"))
+			ret = append(ret, command)
 		}
 	}
-	return -1
+	return ret
 }
-func exchange(arg string) {
+func findProgram(nameA, nameB string) (int, int) {
+	retA := -1
+	retB := -1
+
+	for k, v := range Programs {
+		if v == nameA {
+			retA = k
+		}
+		if v == nameB {
+			retB = k
+		}
+		if retA > -1 && retB > -1 {
+			break
+		}
+	}
+	return retA, retB
+}
+
+type PartnerCommand struct {
+	nA string
+	nB string
+}
+
+func (command *PartnerCommand) Parse(arg string) {
 	args := strings.Split(arg, "/")
-	a, _ := strconv.Atoi(args[0])
-	b, _ := strconv.Atoi(args[1])
-	swap := programs[a]
-	programs[a] = programs[b]
-	programs[b] = swap
+	command.nA = args[0]
+	command.nB = args[1]
+
 }
-func spin(arg string) {
-	num, _ := strconv.Atoi(arg)
-	b := programs[:len(programs)-num]
-	a := programs[len(programs)-num:]
+func (command *PartnerCommand) Execute() {
+	a, b := findProgram(command.nA, command.nB)
 
-	programs = append(a, b...)
+	swap := Programs[a]
+	Programs[a] = Programs[b]
+	Programs[b] = swap
+}
 
+type ExchangeCommand struct {
+	a int
+	b int
+}
+
+func (command *ExchangeCommand) Parse(arg string) {
+	args := strings.Split(arg, "/")
+	command.a, _ = strconv.Atoi(args[0])
+	command.b, _ = strconv.Atoi(args[1])
+}
+func (command *ExchangeCommand) Execute() {
+	swap := Programs[command.a]
+	Programs[command.a] = Programs[command.b]
+	Programs[command.b] = swap
+}
+
+type SpinCommand struct {
+	num int
+}
+
+func (command *SpinCommand) Parse(arg string) {
+	command.num, _ = strconv.Atoi(arg)
+}
+func (command *SpinCommand) Execute() {
+	b := Programs[:len(Programs)-command.num]
+	a := Programs[len(Programs)-command.num:]
+
+	Programs = append(a, b...)
+
+}
+
+type Command interface {
+	Parse(arg string)
+	Execute()
 }
