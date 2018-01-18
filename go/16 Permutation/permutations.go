@@ -39,11 +39,15 @@ func main() {
 	seen := make(map[string]bool)
 	patLength := 0
 	patStart := ""
-	for i := 0; i < 10000; i++ {
+
+	for i := 0; i < 100; i++ {
+
+		foo := strings.Join(Programs, "")
+
 		for _, command := range commands {
 			command.Execute()
 		}
-		foo := strings.Join(Programs, "")
+
 		_, found := seen[foo]
 		if found {
 			patLength = i
@@ -54,7 +58,18 @@ func main() {
 		}
 	}
 
-	fmt.Printf("%d, %s", patLength, patStart)
+	fmt.Printf("%d, %s\n", patLength, patStart)
+
+	for i := 0; i < (1000000000%patLength)-1; i++ {
+
+		for _, command := range commands {
+			command.Execute()
+		}
+	}
+
+	foo := strings.Join(Programs, "")
+	fmt.Println(foo)
+
 }
 
 func parseCommands(input []string) []Command {
