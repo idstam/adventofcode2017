@@ -36,15 +36,25 @@ func main() {
 
 	commands := parseCommands(input)
 
-	for i := 0; i < 1000; i++ {
+	seen := make(map[string]bool)
+	patLength := 0
+	patStart := ""
+	for i := 0; i < 10000; i++ {
 		for _, command := range commands {
 			command.Execute()
 		}
+		foo := strings.Join(Programs, "")
+		_, found := seen[foo]
+		if found {
+			patLength = i
+			patStart = foo
+			break
+		} else {
+			seen[foo] = true
+		}
 	}
 
-	for _, name := range Programs {
-		fmt.Print(name)
-	}
+	fmt.Printf("%d, %s", patLength, patStart)
 }
 
 func parseCommands(input []string) []Command {
