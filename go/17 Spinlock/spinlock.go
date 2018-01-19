@@ -9,17 +9,21 @@ func main() {
 	r := ring.New(1)
 
 	r.Value = 0
-
+	zero := r
 	input := 376
 
-	for i := 1; i < 2018; i++ {
+	rings := make([]*ring.Ring, 50000000)
+	for i := 1; i <= 50000000; i++ {
+		rings[i-1] = ring.New(1)
+	}
+	for i := 1; i <= 50000000; i++ {
 		r = r.Move(input)
-		n := ring.New(1)
+		n := rings[i-1]
 		n.Value = i
 		r.Link(n)
 		r = n
 	}
-	end := r.Next()
+	end := zero.Next()
 
 	fmt.Println(end.Value)
 
