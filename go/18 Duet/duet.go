@@ -9,89 +9,117 @@ import (
 	"strings"
 )
 
-var lastSound int
-var registers = make(map[string]int)
-var pointer = 0
+var registers = make(map[int]map[string]int)
+var waiting = make(map[int]bool)
+var queues = make(map[int][]int)
+var count int = 0
 
 func main() {
 	lines := fileToLines("input.txt")
+	registers[0] = make(map[string]int)
+	registers[1] = make(map[string]int)
 
+	registers[0]["p"] = 0
+	registers[1]["p"] = 1
 	for {
-		cmd, a, b := parseLine(lines[pointer])
-		execCmd(cmd, a, b)
-		pointer++
-		if pointer < 0 || pointer >= len(lines) {
+		for pid := 0; pid < 2; pid++ {
+
+			if registers[pid]["done"] == 1 {
+				continue
+			}
+
+			cmd, a, b := parseLine(pid, lines[registers[pid]["pntr"]])
+			execCmd(pid, cmd, a, b)
+			registers[pid]["pntr"] = registers[pid]["pntr"] + 1
+			if registers[pid]["pntr"] < 0 || registers[pid]["pntr"] >= len(lines) {
+				registers[pid]["done"] = 1
+			}
+		}
+		if waiting[0] && waiting[1] {
+			break
+		}
+		if registers[0]["done"] == 1 && registers[1]["done"] == 1 {
 			break
 		}
 	}
 
-	fmt.Println(lastSound)
+	fmt.Println(count)
 }
 
-func execCmd(cmd string, a string, b int) {
+func execCmd(pid int, cmd string, a string, b int) {
 	switch cmd {
 	case "snd":
-		snd(a)
+		snd(pid, a)
 		break
 	case "set":
-		set(a, b)
+		set(pid, a, b)
 		break
 	case "add":
-		add(a, b)
+		add(pid, a, b)
 		break
 	case "mul":
-		mul(a, b)
+		mul(pid, a, b)
 		break
 	case "mod":
-		mod(a, b)
+		mod(pid, a, b)
 		break
 	case "rcv":
-		rcv(a)
+		rcv(pid, a)
 		break
 	case "jgz":
-		jgz(a, b)
+		jgz(pid, a, b)
 		break
 
 	}
 }
-func parseLine(line string) (cmd string, a string, b int) {
+func parseLine(pid int, line string) (cmd string, a string, b int) {
 	tokens := strings.Split(line, " ")
 
 	x := 0
 	if len(tokens) == 3 {
 		ib, err := strconv.Atoi(tokens[2])
 		if err != nil {
-			ib = registers[tokens[2]]
+			ib = registers[pid][tokens[2]]
 		}
 		x = ib
 	}
 	return tokens[0], tokens[1], x
 }
 
-func snd(reg string) {
-	lastSound = registers[reg]
-}
-func rcv(reg string) {
-	if registers[reg] != 0 {
-		registers[reg] = lastSound //Break here to get value for part one
+func snd(pid int, reg string) {
+	if pid == 0 {
+		queues[1] = append(queues[1], registers[0][reg])
+	} else {
+		count++
+		queues[1] = append(queues[0], registers[1][reg])
 	}
 }
-func set(reg string, val int) {
-	registers[reg] = val
+func rcv(pid int, reg string) {
+	if registers[pid][reg] != 0 {
+		if len(queues[pid]) > 0 {
+			registers[pid][reg] = queues[pid][len(queues[pid])-1]
+			queues[pid] = queues[pid][1:len(queues[pid])]
+		} else {
+			waiting[pid] = true
+		}
+	}
 }
-func add(reg string, val int) {
-	registers[reg] = registers[reg] + val
+func set(pid int, reg string, val int) {
+	registers[pid][reg] = val
 }
-func mul(reg string, val int) {
-	registers[reg] = registers[reg] * val
+func add(pid int, reg string, val int) {
+	registers[pid][reg] = registers[pid][reg] + val
 }
-func mod(reg string, val int) {
-	registers[reg] = registers[reg] % val
+func mul(pid int, reg string, val int) {
+	registers[pid][reg] = registers[pid][reg] * val
+}
+func mod(pid int, reg string, val int) {
+	registers[pid][reg] = registers[pid][reg] % val
 }
 
-func jgz(reg string, val int) {
-	if registers[reg] > 0 {
-		pointer += (val - 1)
+func jgz(pid int, reg string, val int) {
+	if registers[pid][reg] > 0 {
+		registers[pid]["pntr"] = registers[pid]["pntr"] + (val - 1)
 	}
 }
 
