@@ -6,3 +6,14 @@ function stringToIntArray(input)
     end
     return ret
 end
+
+function fileToStringArray(fileName)
+    ret = Array{String,1}()
+    open(fileName) do file
+
+        for line in eachline(file)
+            push!(ret, line)
+        end
+    end
+    return ret
+end
