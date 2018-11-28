@@ -1,4 +1,4 @@
-# adventofcode2017
+# adventofcode
 My solutions to http://adventofcode.com
 
 
