@@ -2,7 +2,10 @@ let
         tot = 0
         prev = Dict()
         foundIt = false
+        loopCount = 0
         while !foundIt
+            loopCount += 1
+            println(loopCount)
             open("data.txt") do file
                 for line in eachline(file)
                     operator = line[1]
