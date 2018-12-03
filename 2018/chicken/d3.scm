@@ -1,21 +1,105 @@
 (use utils)
 (use srfi-1)
+(use srfi-13)
 (use srfi-69)
 
-(define (cleanTokens lines)
-	(display (car lines))
-	(define cleanString (string-delete '@' (car lines)))
-	(display cleanString)
+(define (cleanTokens line)
+	(string-tokenize (string-translate (string-translate (string-translate (string-translate line "@") ":") "," " ") "x" " ") )
 )
 
+(define (println s)
+	(display s)
+	(display "\n")
+)
 
+(define (map-lines->cleanTokens lines acc)
+	(if (null-list? lines)
+		acc
+		(map-lines->cleanTokens (cdr lines) (append acc (list(cleanTokens (car lines)))))
+		)
+)
+
+(define (number-between num start end)
+	(if (>= num start)
+		(if (<= num end)
+			#t
+		)
+		#f
+	)
+)
+(define (left r)
+	(second r)
+)
+(define (right r)
+	(third r)
+)
+(define (top r)
+	(fourth r)
+)
+(define (bottom r)
+	(fifth r)
+)
+(define (cleanTokens->rectangle cleanTokens)
+	(define left(string->number(second cleanTokens)) )
+	(define width (string->number(fourth cleanTokens)))
+	(define right (+ left (- width 1)))
+
+	(define top(string->number(third cleanTokens)) )
+	(define height (string->number(fifth cleanTokens)))
+	(define bottom (+ top (- height 1)))
+
+	(list (first cleanTokens) left right top bottom)
+)
+
+(define (map-cleanTokens->rectangles src acc)
+	(if (null-list? src)
+		acc
+		(map-cleanTokens->rectangles (cdr src) (append acc (list(cleanTokens->rectangle (car src)))))
+		)
+)
+
+(define (rectangle-intersects r1 r2)
+	(if (eq? (first r1) (first r2))
+		#f
+		(not (or (> (left r2)  (right r1))  
+			(< (right r2)  (left r1))
+			(> (top r2)  (bottom r1))
+			(< (bottom r2) (top r1))
+			)
+		)
+	)
+)
+
+(define (rectangle-intersects-any? r1 rlist)
+		; (println r1)
+		; (println (car rlist))
+		; (println (rectangle-intersects r1 (car rlist)))
+		; (println "----")
+
+		(if (null-list? rlist)
+			#f
+			(if (rectangle-intersects r1 (car rlist))
+				#t
+				(rectangle-intersects-any? r1 (cdr rlist))
+			)
+		)
+)
+(define (rectangle-many-intersects-any? r1list r2list)
+		(if (null-list? r1list)
+			#f
+			(if (rectangle-intersects-any? (car r1list) r2list )
+				(rectangle-many-intersects-any? (cdr r1list) r2list)
+				(car r1list)
+			)
+		)
+)
 
 (define (main args)
-	(define a (cleanTokens (read-lines "d3data.txt")))
-	
-	
-	(display a)
-	;(display (car (read-lines "d2data.txt")))
-	;(display (car ))
-	;(display (hasNum 2 (car (read-lines "d2data.txt"))))
+
+	(define lines (read-lines "d3data.txt"))
+	(define cleanTokenList (map-lines->cleanTokens lines (list)))
+	(define rectangles (map-cleanTokens->rectangles cleanTokenList (list) ))	
+	; (display rectangles)
+	;(display (rectangle-intersects (first rectangles) (first rectangles)))
+	(display (rectangle-many-intersects-any? rectangles rectangles))
 )
