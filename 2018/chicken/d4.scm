@@ -50,18 +50,35 @@
 		)
 	)
 )
-(define (scan-data tokensList guardsTable currGuard)
+(define (scan-data tokensList guardsTable lastGuard lastMin)
 	(if (null-list? tokensList)
-						guardsTable ##¤#¤#¤#¤#¤
+		guardsTable
+		(begin
+			(if (= (string-compare3 (third (car tokensList)) "Guard") 0)
+				(scan-data (cdr tokensList) guardsTable (fourth (car tokensList)) 0)	
+			)
+			(if (= (string-compare3 (third (car tokensList)) "falls") 0)
+				(scan-data (cdr tokensList) guardsTable lastGuard (tokens->minute (car tokensList)))	
+			)
+			(if (= (string-compare3 (third (car tokensList)) "wakes") 0)
+				(begin
+					(define sleepRecord (list lastGuard lastMin (- (tokens->minute (car tokensList)) 1) ))
+					(println sleepRecord)
+					(scan-data (cdr tokensList) guardsTable lastGuard 0 )	
+				)
+			)
+		)
 	)
 )
+
 (define (main args)
 
 	(define lines (sort (read-lines "d4data.txt") string-less)  )
 	(define tokens (lines->tokens lines (list)))
 	(define guardsTable (make-guards-table tokens (make-hash-table)))
-
+	(display (scan-data tokens guardsTable "-" 0 ))
 	;(display (hash-table-keys guardsTable))
 	;(println (tokens->minute (car tokens)))
+	
 
 )
