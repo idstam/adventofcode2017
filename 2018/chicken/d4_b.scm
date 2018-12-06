@@ -3,10 +3,6 @@
 (use srfi-13)
 (use srfi-69)
 (use vector-lib)
-(define (println s)
-	(display s)
-	(display "\n")
-)
 
 (define (cleanTokens line)
 	(string-tokenize line)
@@ -56,19 +52,22 @@
 	)
 )
 
-(define (make-guards-table-b tokensList empty-vector guardsTable)
+
+(define (make-guards-table-b tokensList guardsTableB)
 	(if (null-list? tokensList)
-		guardsTable
+		guardsTableB
 		(begin 
+			(define empty-time-vector (vector 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ))
+
 			;Create new guard item if needed
 			(if (= (string-compare3 (third (car tokensList)) "Guard") 0)
-				(if (not (hash-table-exists? guardsTable (fourth (car tokensList) )))
+				(if (not (hash-table-exists? guardsTableB (fourth (car tokensList) )))
 					(begin
-						(hash-table-set! guardsTable (fourth (car tokensList)) empty-vector )
+						(hash-table-set! guardsTableB (fourth (car tokensList)) empty-time-vector )
 					)
 				)					
 			)
-			(make-guards-table-b (cdr tokensList) empty-vector guardsTable)
+			(make-guards-table-b (cdr tokensList)  guardsTableB)
 		)
 	)
 )
@@ -108,18 +107,6 @@
 		)
 	)
 )
-(define (guard-sleep-times-b sleepRecords guardsTableB)
-	(if (null-list? sleepRecords)
-		guardsTableB
-		(begin
-			(define guard (first (car sleepRecords)))
-			(define sleepTime (hash-table-ref/default guardsTableB guard 0))
-			(fill-time-vector sleepTime (second (car sleepRecords)) (third (car sleepRecords)))			
-			(hash-table-set! guardsTableB guard newSleepTime)
-			(guard-sleep-times-b (cdr sleepRecords) guardsTableB)	
-		)
-	)
-)
 (define (max-sleep-time sleepTimes keys maxGuard max)
 	(if (null-list? keys)
 		(list maxGuard max)
@@ -154,18 +141,6 @@
 		)
 	)
 )
-(define (set-all-guard-minutes guardTableB guardKeys sleepRecords)
-	(if (null-list? guardKeys)
-		guardTableB
-		(begin
-			(define guard ((car guardKeys)))
-			(define guardVectorIn ((hash-table-ref guardsTable guard)))
-			(define guardVectorOut (set-guard-minutes guard guardVectorIn sleepRecords))
-			(hash-table-set! guardsTable guard guardVectorOut)
-			(set-all-guard-minutes guardTableB (cdr guardKeys) sleepRecords)
-		)
-	)
-)
 (define (most-minute-count guardMinutes)
 	(vector-fold (lambda (index len x) 
 					(max x len)
@@ -183,6 +158,45 @@
 	)
 )
 
+(define (max-most-minute-count guardsTableB keys max maxGuard)
+	(if (null-list? keys)
+		(list maxGuard max)
+		(begin
+			(define mmc (most-minute-count (hash-table-ref guardsTableB (car keys) )))
+			(if (> mmc max)
+				(max-most-minute-count guardsTableB (cdr keys) mmc (car keys))
+				(max-most-minute-count guardsTableB (cdr keys) max maxGuard)
+			)
+		)
+	)
+)
+
+
+(define (guard-sleep-times-b sleepRecords guardsTableB)
+	(if (null-list? sleepRecords)
+		guardsTableB
+		(begin		
+			(define guard (car (car sleepRecords)))
+			(define sleepTime (hash-table-ref guardsTableB guard))
+			(define newSleepTime (fill-time-vector sleepTime (second (car sleepRecords)) (third (car sleepRecords))))
+			(hash-table-set! guardsTableB guard newSleepTime)
+			(guard-sleep-times-b (cdr sleepRecords) guardsTableB)	
+		)
+	)
+)
+(define (set-all-guard-minutes guardsTableB guardKeys sleepRecords)
+	(if (null-list? guardKeys)
+		guardsTableB
+		(begin
+			(define guard (car guardKeys))
+			(define guardVectorIn (hash-table-ref guardsTableB guard))
+			(define guardVectorOut (set-guard-minutes guard guardVectorIn sleepRecords))
+			(hash-table-set! guardsTableB guard guardVectorOut)
+			(set-all-guard-minutes guardsTableB (cdr guardKeys) sleepRecords)
+		)
+	)
+)
+
 (define (main args)
 
 	(define lines (sort (read-lines "d4data.txt") string-less)  )
@@ -194,17 +208,20 @@
 	(define empty-time-vector (vector 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ))
 	(define guardMinutes (set-guard-minutes (car sleeper) empty-time-vector sleepRecords))
 	
-	(println (list "Sleeper:" sleeper))
+	(print (list "Sleeper:" sleeper))
 
-	(define guardsTableB (make-guards-table-b tokens empty-time-vector (make-hash-table)))
+	(define guardsTableB (make-guards-table-b tokens (make-hash-table)))
 	(define sleepTimesB (guard-sleep-times-b sleepRecords guardsTableB))
-	(define allGuardMinutes (set-all-guard-minutes guardTableB guardKeys sleepRecords))
+	(define allGuardMinutes (set-all-guard-minutes guardsTableB (hash-table-keys guardsTableB) sleepRecords))
 	
-	;(println allGuardMinutes)
-	; (println 
-	; 	(vector-for-each (lambda (i x) (display (list i x)) (newline))
-	; 			 guardMinutes)
-	; )
+	(define mmc (max-most-minute-count guardsTableB (hash-table-keys guardsTableB) 0 "-"))
+	(define minute (most-minute (hash-table-ref guardsTableB (first mmc)) 0 (second mmc)))
+	(print mmc)
+	(print minute)
+	; (print
+	;  	(vector-for-each (lambda (i x) (display (list i x)) (newline))
+	; 	 (hash-table-ref guardsTableB "#99"))
+	;  )
 
 
 
