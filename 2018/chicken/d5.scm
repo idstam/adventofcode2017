@@ -20,46 +20,114 @@
       (nth (cdr l) (- n 1)))))
 
 (define (poly-pair? a b)
+    ;(print (list "poly-pair?" a b))
     (= 32 (abs (- a b) ))
 )
 
-(define (find-first-poly-pair int-list i)
-    (if (length=1? int-list )
-        #f
-        (begin
-            (define a (first int-list))
-            (define b (second int-list))
-            (if (poly-pair? a b)
-                i
-                (find-first-poly-pair (cdr int-list) (+ 1 i))
+(define (filter-poly-pairs in-list out-list)
+    ;(print (list "filter-poly-pairs" in-list out-list i))
+    ;(print (list "in a" in-list))
+    ;(print (list "out a" out-list))
+    
+    (if (= (length in-list) (length out-list))
+        out-list
+        (begin 
+             (define out (fold 
+                (lambda (list-item acc)   
+                    (begin
+                        ;(print acc)
+                        (if (= 0 (first acc))
+                            (list list-item (second acc) #f)
+                            (if (poly-pair? list-item (first acc))
+                                (list 0 (second acc) #t)
+                                (list list-item (append (second acc) (list (first acc))) #f )
+                            )
+                        )
+                    )
+                ) (list 0 (list) #f) in-list
+                )  
+            )
+            ;(print (list "in b" in-list))
+            ;(print (list "out b" out))
+            (if (third out)
+                (filter-poly-pairs (second out) in-list)
+                (filter-poly-pairs (append (second out) (list (last in-list)) ) in-list)
             )
         )
+    
     )
 )
 
-(define (filter-poly-pairs int-list i)
-    (if (= (length int-list) (+ 1 i))
-        int-list
-        (begin
-            (define a (nth int-list i))
-            (define b (nth int-list (+ 1 i)))
-            (if (poly-pair? a b)
-                (begin 
-                    (define la (delete-n int-list i))
-                    (define lb (delete-n la i)) ;Eftersom jag tog bort en precis är det samma index som ska tas bort igen
-                    (filter-poly-pairs lb 0)
-                )
-                (filter-poly-pairs int-list (+ 1 i))
-            )
-        )
-    )
-)
+(define (pol-count2 string-list a)
+    (define filtered-string-list (filter (lambda (x) (not( eq? a x ))  ) string-list) )
+    (define filtered-string-list (filter (lambda (x) (not( eq? (integer->char (+ 32 (char->integer a))) x ))  ) filtered-string-list) )
+    ;(print filtered-string-list)
+    (define int-list (map-in-order char->integer filtered-string-list))
+    (define filtered-list (filter-poly-pairs int-list (list))) 
+    ;(print filtered-list)
+    (define polymer (list->string (map-in-order integer->char filtered-list)))
+    ;(print polymer)
+    (string-length polymer)
 
+)
 
 (define (main args)
-    (define int-list (map-in-order char->integer (string->list (car (read-lines "d5data.txt")))))
-    (define filtered-list (filter-poly-pairs int-list 0))
-    (define polymer (list->string (map-in-order integer->char filtered-list)))
-    (print polymer)
-    (print (string-length polymer))
+;Första
+    ;(define int-list (map-in-order char->integer (string->list (car (read-lines "d5data.txt")))))
+    ;(define filtered-list (filter-poly-pairs int-list (list))) 
+    ;(print filtered-list)
+    ;(define polymer (list->string (map-in-order integer->char filtered-list)))
+    ;(print polymer)
+    ;(print (string-length polymer))
+
+;Andra
+    (define string-list (string->list (car (read-lines "d5data2.txt"))))
+
+    (print (list "A" (pol-count2 string-list #\A)))
+    (print (list "B" (pol-count2 string-list #\B)))
+    (print (list "C" (pol-count2 string-list #\C)))
+    (print (list "D" (pol-count2 string-list #\D)))
+    (print (list "E" (pol-count2 string-list #\E)))
+    (print (list "F" (pol-count2 string-list #\F)))
+    (print (list "G" (pol-count2 string-list #\G)))
+    (print (list "H" (pol-count2 string-list #\H)))
+    (print (list "I" (pol-count2 string-list #\I)))
+    (print (list "J" (pol-count2 string-list #\J)))
+    (print (list "K" (pol-count2 string-list #\K)))
+    (print (list "L" (pol-count2 string-list #\L)))
+    (print (list "M" (pol-count2 string-list #\M)))
+    (print (list "N" (pol-count2 string-list #\N)))
+    (print (list "O" (pol-count2 string-list #\O)))
+    (print (list "P" (pol-count2 string-list #\P)))
+    (print (list "Q" (pol-count2 string-list #\Q)))
+    (print (list "R" (pol-count2 string-list #\R)))
+    (print (list "S" (pol-count2 string-list #\S)))
+    (print (list "T" (pol-count2 string-list #\T)))
+    (print (list "U" (pol-count2 string-list #\U)))
+    (print (list "V" (pol-count2 string-list #\V)))
+    (print (list "W" (pol-count2 string-list #\W)))
+    (print (list "X" (pol-count2 string-list #\X)))
+    (print (list "Y" (pol-count2 string-list #\Y)))
+    (print (list "Z" (pol-count2 string-list #\Z)))
+
+    ; (define letters 
+    ;     (fold (lambda (letter letter-table)
+    ;                 (hash-table-set! letter-table letter 1)
+    ;                 letter-table
+    ;     ) (make-hash-table)  string-list)
+    ; )
+    
+    ; ;(print string-list)
+    ; (define filtered-string-list (filter (lambda (x) (not( eq? #\a x ))  ) string-list) )
+    ; (define filtered-string-list (filter (lambda (x) (not( eq? #\A x ))  ) filtered-string-list) )
+    ; ;(print filtered-string-list)
+    ; (define int-list (map-in-order char->integer filtered-string-list))
+    ; (define filtered-list (filter-poly-pairs int-list (list))) 
+    ; ;(print filtered-list)
+    ; (define polymer (list->string (map-in-order integer->char filtered-list)))
+    ; ;(print polymer)
+    ; (print (string-length polymer))
+    
+;(print (integer->char (+ 32 (char->integer #\A))))
+
 )
