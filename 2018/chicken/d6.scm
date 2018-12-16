@@ -39,6 +39,22 @@
 
 )
 
+(define (calc-cell-total-distance x y cell data)
+    (define grid (second data))
+    (define points (first data))
+    ;(print (list "cell" x y cell))
+    (define acc (fold (lambda (point index) 
+            ;(print (list "L" index point))
+            (define cell (grid-ref grid x y))
+            (define d (distance (first point) (second point) x y))
+            ;(define c (append cell (list d)))
+            
+            ;(grid-set! grid x y c)
+        (+ index d)) 0 points)
+    )
+        ;(print (list "acc" x y acc))
+        (grid-set! grid x y acc)
+)
 (define (calc-cell-not-single x y cell grid)
     
     (define cell (grid-ref grid x y))
@@ -47,6 +63,28 @@
         (grid-set! grid x y (first cell))
     )
 )
+
+
+(define (grid-fold grid f seed)
+    (vector-fold (lambda (y seed row) 
+                    (begin 
+                        ;(print (list "row" y seed row))
+                        (vector-fold (lambda (x seed cell) 
+                            (begin 
+                                (f x y cell seed)
+                            )) seed row)
+                    )) seed grid)
+)
+
+
+(define (count-less-than x y cell seed)
+    (print (list "count-less-than" x y cell seed))
+    (if (< cell 10000 )
+        (+ 1 seed)
+        seed
+    )
+)
+
 
 (define (calc-area x y cell point-table)
     
@@ -113,22 +151,30 @@
     (define boundaries (list minX maxX minY maxY))
     ;(print (list "bounds" boundaries))
     (define grid (make-grid (+ 1 maxX) (+ 1 maxY) (list)))
-
-    (grid-for-each grid calc-cell-closest (list points grid))
-    (grid-for-each grid calc-cell-not-single grid)
     
+    (grid-for-each grid calc-cell-total-distance (list points grid))
     ;(print grid)
-
-    (define point-table (alist->hash-table (map point->hash-pair points)))
-    ;(print "A")
-    ;(hash-table-walk point-table print-hash-pair)
-
-    (grid-for-each grid find-infinite-area! (list point-table boundaries))
-    ;(print "B")
-    ;(hash-table-walk point-table print-hash-pair)
-
-    (grid-for-each grid calc-area point-table)
-    ;(print "C")
-    (hash-table-walk point-table print-hash-pair)
+    ;(define sum 0)
+    ;(grid-for-each grid count-less-than sum)
+    (print (list "sum" (grid-fold grid count-less-than 0)))
+ 
     
+    ;Part one >>
+    ; (grid-for-each grid calc-cell-closest (list points grid))
+    ; (grid-for-each grid calc-cell-not-single grid)
+    
+    ; ;(print grid)
+
+    ; (define point-table (alist->hash-table (map point->hash-pair points)))
+    ; ;(print "A")
+    ; ;(hash-table-walk point-table print-hash-pair)
+
+    ; (grid-for-each grid find-infinite-area! (list point-table boundaries))
+    ; ;(print "B")
+    ; ;(hash-table-walk point-table print-hash-pair)
+
+    ; (grid-for-each grid calc-area point-table)
+    ; ;(print "C")
+    ; (hash-table-walk point-table print-hash-pair)
+    ; ;<<<<< Part one
 )

@@ -32,3 +32,15 @@
                             0)) 0 row)
                     0)) 0 grid)
 )
+
+(define (grid-fold grid f seed)
+    (vector-fold (lambda (y seed row) 
+                    (begin 
+                        ;(print (list "row" y seed row))
+                        (vector-fold (lambda (x seed cell) 
+                            (begin 
+                                (f x y cell seed)
+                            )) seed row)
+                    )) seed grid)
+)
+
