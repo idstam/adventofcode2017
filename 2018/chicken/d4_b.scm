@@ -23,7 +23,8 @@
 	)
 )
 (define (string-less s1 s2)
-	(= -1 (string-compare3 s1 s2))
+    (print (list "string-less" s1 s2 (= -1 (string-compare3 s1 s2))))
+	(<  (string-compare3 s1 s2) 0)
 )
 
 (define (tokens->minute tokens)
