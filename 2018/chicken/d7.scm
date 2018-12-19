@@ -31,7 +31,9 @@
 	(=  (string-compare3 s1 s2) 0)
 )
 
-
+(define (string->work-time s)
+    (- (char->integer (car (string->list s))) 64)
+)
 (define (find-first-done letter-table keys)
         ;(print (list "ffd" keys))
         (if (null-list? keys)

@@ -1,0 +1,36 @@
+(use utils)
+(use list-utils)
+(use vector-lib)
+(use srfi-1)
+(use srfi-69)
+
+(define (parse-input input)
+    (if (null-list? input)
+        -1
+        (begin 
+            (define num-child (first input))
+            (define num-meta (second input))
+            (define tail (cdr (cdr input)))
+            (define my-children (list))
+            (print (list "A" num-child num-meta))
+            (do ((i 1 (+ i 1)))             ;(do ((var1 base1 exp1) (var2 base2 exp2) ...)
+                ((> i num-child) )        ;((test? ...) final-exp)
+                (begin                      ;side-effecting-statements ...)
+                    (define child (parse-input tail))
+                    (append! my-children child)
+                    (print (list "child" child))
+                    (set! tail (drop tail (length (first child))))
+                )
+            )
+            (define my-meta (take tail num-meta))
+            (list my-meta my-children)
+        )
+    )
+)
+
+(define (main args)
+    (define input (list 2 3 0 3 10 11 12 1 1 0 1 99 2 1 1 2))
+    
+    (print (parse-input input))
+
+)
