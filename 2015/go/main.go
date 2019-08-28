@@ -10,23 +10,38 @@ import (
 )
 
 func main() {
-	lines := fileToLines("input02.txt")
-	tot := 0
-	for _, line := range lines {
-		edges := strings.Split(line, "x")
-		l, _ := strconv.Atoi(edges[0])
-		w, _ := strconv.Atoi(edges[1])
-		h, _ := strconv.Atoi(edges[2])
+	lines := fileToLines("input03.txt")
+	karta := map[string]int{}
+	sPosX := 0
+	sPosY := 0
+	key := ""
+	for _, c := range lines[0] {
+		switch c {
+		case '<':
+			sPosX--
+			break
+		case '>':
+			sPosX++
+			break
+		case '^':
+			sPosY--
+			break
+		case 'v':
+			sPosY++
+			break
+		}
 
-		a1 := 2 * (l + w)
-		a2 := 2 * (w + h)
-		a3 := 2 * (h + l)
-		m := minInt(a1, a2, a3)
-
-		tot = tot + m + (l * w * h)
-
+		key = strconv.Itoa(sPosX) + "," + strconv.Itoa(sPosY)
+		karta[key] = karta[key] + 1
 	}
-	fmt.Println(tot)
+	ret := 0
+	for _, i := range karta {
+		if i > 0 {
+			ret++
+		}
+	}
+
+	fmt.Println(ret)
 }
 
 func minInt(numbers ...int) int {
