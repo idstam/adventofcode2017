@@ -13,15 +13,28 @@ func main() {
 	for _, line := range fileToLines("input05.txt") {
 		//line = "dvszwmarrgswjxmb"
 		line += " "
-		hasA := false
-		hasB := false
+		vowelCount := 0
+		hasDouble := false
+
+		if strings.Contains(line, "ab") {
+			continue
+		}
+		if strings.Contains(line, "cd") {
+			continue
+		}
+		if strings.Contains(line, "pq") {
+			continue
+		}
+		if strings.Contains(line, "xy") {
+			continue
+		}
 
 		for pos, c := range line {
 			if strings.ContainsRune("aeiou", c) {
 				vowelCount++
 			}
 
-			if pos < len(line)-4 && line[pos] == line[pos+1] {
+			if pos < len(line)-1 && line[pos] == line[pos+1] {
 				hasDouble = true
 			}
 			if hasDouble && vowelCount > 2 {
