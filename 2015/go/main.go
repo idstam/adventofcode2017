@@ -11,20 +11,24 @@ import (
 func main() {
 	niceCount := 0
 	for _, line := range fileToLines("input05.txt") {
-		//line = "dvszwmarrgswjxmb"
-		line += " "
+		//line = "ieodomkazucvgmuy"
 		hasA := false
 		hasB := false
 
-		for pos, c := range line {
-			if strings.ContainsRune("aeiou", c) {
-				vowelCount++
+		for pos := range line {
+
+			if pos > 1 && pos < len(line)-3 {
+				rest := line[pos:]
+				last2 := line[pos-2 : pos]
+				if strings.Contains(rest, last2) {
+					hasA = true
+				}
+			}
+			if pos < len(line)-2 && line[pos] == line[pos+2] {
+				hasB = true
 			}
 
-			if pos < len(line)-4 && line[pos] == line[pos+1] {
-				hasDouble = true
-			}
-			if hasDouble && vowelCount > 2 {
+			if hasA && hasB {
 				niceCount++
 				break
 			}
