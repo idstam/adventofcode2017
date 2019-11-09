@@ -3,11 +3,11 @@ package main
 import "fmt"
 
 func main() {
-	inA := 699
-	inB := 124
+	inA := 116
+	inB := 299
 
-	//inA := 65
-	//inB := 8921
+	// inA := 65
+	// inB := 8921
 	eqCount := 0
 
 	for i := 0; i < 5000000; i++ {
@@ -28,8 +28,8 @@ func main() {
 			}
 			mask = mask << 1
 		}
-		//fmt.Printf("%32b\n", inA)
-		//fmt.Printf("%32b\n", inB)
+		// fmt.Printf("%32b\n", inA)
+		// fmt.Printf("%32b\n", inB)
 
 		if eq {
 			//fmt.Println(i)
@@ -44,6 +44,7 @@ func generatorA(input int) int {
 	for {
 		prd := input * 16807
 		rem := prd % 2147483647
+		//Part 1 return rem
 		doReturn := rem % 4
 		if doReturn == 0 {
 			return rem
@@ -56,6 +57,7 @@ func generatorB(input int) int {
 	for {
 		prd := input * 48271
 		rem := prd % 2147483647
+		//Part 1 return rem
 		doReturn := rem % 8
 		if doReturn == 0 {
 			return rem

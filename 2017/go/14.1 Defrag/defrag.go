@@ -9,7 +9,7 @@ import (
 const MemSize = 256
 
 func main() {
-	input := "vbqugkhl"
+	input := "ffayrhll"
 	usedTot := 0
 	//input := "AoC 2017"
 	for line := 0; line < 128; line++ {

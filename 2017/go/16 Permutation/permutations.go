@@ -1,17 +1,11 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"io/ioutil"
-	"log"
-	"os"
-	"runtime/pprof"
 	"strconv"
 	"strings"
 )
-
-var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
 
 var Programs = []string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p"}
 var PrgBuff []string
@@ -19,15 +13,6 @@ var PrgBuff []string
 //var Programs = []string{"a", "b", "c", "d", "e"}
 
 func main() {
-	flag.Parse()
-	if *cpuprofile != "" {
-		f, err := os.Create(*cpuprofile)
-		if err != nil {
-			log.Fatal(err)
-		}
-		pprof.StartCPUProfile(f)
-		defer pprof.StopCPUProfile()
-	}
 
 	PrgBuff = make([]string, len(Programs))
 	buf, _ := ioutil.ReadFile("input.txt")
@@ -47,7 +32,11 @@ func main() {
 		for _, command := range commands {
 			command.Execute()
 		}
-
+		//On first run Programs will be the solution to part one here.
+		if i == 0 {
+			foo := strings.Join(Programs, "")
+			fmt.Println(foo)
+		}
 		_, found := seen[foo]
 		if found {
 			patLength = i

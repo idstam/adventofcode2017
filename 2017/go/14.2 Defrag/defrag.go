@@ -10,7 +10,7 @@ const MemSize = 256
 var mem [][]int
 
 func main() {
-	input := "vbqugkhl"
+	input := "ffayrhll"
 	//input = "flqrgnkx"
 
 	mem = make([][]int, 128, 128)
