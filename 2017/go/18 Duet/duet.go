@@ -13,6 +13,8 @@ var registers = make(map[int]map[string]int)
 var waiting = make(map[int]bool)
 var queues = make(map[int][]int)
 var count int = 0
+var lastSound = 0
+var tick = 0
 
 func main() {
 	lines := fileToLines("input.txt")
@@ -21,35 +23,54 @@ func main() {
 
 	registers[0]["p"] = 0
 	registers[1]["p"] = 1
+
 	for {
+		tick++
 		for pid := 0; pid < 2; pid++ {
+			// if waiting[pid] {
+			// 	registers[pid]["waiting"] = 1
+			// } else {
+			// 	registers[pid]["waiting"] = 0
+			// }
+			// registers[pid]["queueLength"] = len(queues[pid])
+			// fmt.Println(registers[pid])
+			// fmt.Println(lines[registers[pid]["pntr"]])
 
 			if registers[pid]["done"] == 1 {
 				continue
 			}
-
+			if waiting[pid] {
+				continue
+			}
 			cmd, a, b := parseLine(pid, lines[registers[pid]["pntr"]])
 			execCmd(pid, cmd, a, b)
+
 			registers[pid]["pntr"] = registers[pid]["pntr"] + 1
-			if registers[pid]["pntr"] < 0 || registers[pid]["pntr"] >= len(lines) {
+			if registers[pid]["pntr"] <= 0 || registers[pid]["pntr"] >= len(lines) {
 				registers[pid]["done"] = 1
 			}
 		}
-		if waiting[0] && waiting[1] {
+		//fmt.Println("------------------------------------------")
+		if (waiting[0] || registers[0]["done"] == 1) && (waiting[1] || registers[1]["done"] == 1) {
+			fmt.Println("Both terminated")
 			break
 		}
-		if registers[0]["done"] == 1 && registers[1]["done"] == 1 {
-			break
+
+		if tick%1000000 == 0 {
+			fmt.Println("Tick count too large")
+			//break
 		}
 	}
 
-	fmt.Println(count)
+	fmt.Printf("Program 1 send count %d \n", count)
 }
 
 func execCmd(pid int, cmd string, a string, b int) {
+
 	switch cmd {
 	case "snd":
 		snd(pid, a)
+		lastSound = registers[0][a]
 		break
 	case "set":
 		set(pid, a, b)
@@ -87,22 +108,33 @@ func parseLine(pid int, line string) (cmd string, a string, b int) {
 }
 
 func snd(pid int, reg string) {
+
+	val := registers[pid][reg]
+
 	if pid == 0 {
-		queues[1] = append(queues[1], registers[0][reg])
+		queues[1] = append(queues[1], val)
+		waiting[1] = false
 	} else {
 		count++
-		queues[1] = append(queues[0], registers[1][reg])
+		queues[0] = append(queues[0], val)
+		waiting[0] = false
 	}
 }
 func rcv(pid int, reg string) {
-	if registers[pid][reg] != 0 {
-		if len(queues[pid]) > 0 {
-			registers[pid][reg] = queues[pid][len(queues[pid])-1]
-			queues[pid] = queues[pid][1:len(queues[pid])]
-		} else {
-			waiting[pid] = true
-		}
+	if len(queues[pid]) == 0 {
+		waiting[pid] = true
+		registers[pid]["pntr"] = registers[pid]["pntr"] - 1 //So that we'll try this instruction again when the wait is over
+		return
 	}
+
+	// if registers[pid][reg] != 0 {
+	// 	if lastSound != 0 && pid == 0 {
+	// 		fmt.Printf("Last sound for part one: %d \n", lastSound)
+	// 	}
+	// }
+	registers[pid][reg] = queues[pid][0]
+	queues[pid] = queues[pid][1:]
+
 }
 func set(pid int, reg string, val int) {
 	registers[pid][reg] = val
@@ -118,8 +150,12 @@ func mod(pid int, reg string, val int) {
 }
 
 func jgz(pid int, reg string, val int) {
-	if registers[pid][reg] > 0 {
-		registers[pid]["pntr"] = registers[pid]["pntr"] + (val - 1)
+	a, err := strconv.Atoi(reg)
+	if err != nil {
+		a = registers[pid][reg]
+	}
+	if a > 0 {
+		registers[pid]["pntr"] = registers[pid]["pntr"] + (val - 1) //When I get out of here the pointer will ++, hence -1
 	}
 }
 
