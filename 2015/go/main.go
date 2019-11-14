@@ -11,7 +11,7 @@ import (
 func main() {
 	niceCount := 0
 	for _, line := range fileToLines("input05.txt") {
-		//line = "ieodomkazucvgmuy"
+		line = "xxyxx"
 		hasA := false
 		hasB := false
 
@@ -33,7 +33,7 @@ func main() {
 				break
 			}
 		}
-		//break
+		break
 	}
 
 	fmt.Println(niceCount)
