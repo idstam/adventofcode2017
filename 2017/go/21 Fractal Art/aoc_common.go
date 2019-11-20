@@ -17,13 +17,25 @@ func getSubStringMatrix(in [][]string, x1, y1, blockSize int) [][]string {
 	}
 	return a
 }
-func flipSquareStringMatrix(pattern [][]string) [][]string {
+func flipSquareStringMatrixY(pattern [][]string) [][]string {
 	ret := [][]string{}
 	for readY := len(pattern) - 1; readY >= 0; readY-- {
 		ret = append(ret, pattern[readY])
 	}
 	return ret
 
+}
+
+func flipSquareStringMatrixX(in [][]string) [][]string {
+	ret := makeSquareStringMatrix(len(in[0]), "")
+	maxX := len(in[0]) - 1
+	for x := 0; x < len(in[0]); x++ {
+		for y := 0; y < len(in); y++ {
+			ret[y][maxX-x] = in[y][x]
+		}
+	}
+
+	return ret
 }
 
 func rotateSquareStringMatrix90(in [][]string) [][]string {
@@ -34,6 +46,25 @@ func rotateSquareStringMatrix90(in [][]string) [][]string {
 		}
 	}
 	return a
+}
+func makeSquareStringMatrix(size int, def string) [][]string {
+	ret := [][]string{}
+	for y := 0; y < size; y++ {
+		ret = append(ret, []string{})
+		for x := 0; x < size; x++ {
+			ret[y] = append(ret[y], def)
+		}
+	}
+	return ret
+}
+func blitStringMatrix(small, large [][]string, x, y int) [][]string {
+	for dy := 0; dy < len(small[0]); dy++ {
+		for dx := 0; dx < len(small[0]); dx++ {
+			large[dy+y][dx+x] = small[dy][dx]
+		}
+	}
+
+	return large
 }
 func stringToSlice(in string) []string {
 	ret := []string{}
@@ -63,13 +94,14 @@ func fileToLines(fileName string) []string {
 	return ret
 }
 
-func dumpStringMatrix(matrix [][]string) {
-	fmt.Println("StringMatrix:")
+func dumpStringMatrix(matrix [][]string, caption string) {
+	fmt.Println(caption + ":")
 	for _, line := range matrix {
+		fmt.Print("|>")
 		for _, s := range line {
 			fmt.Print(s)
 		}
-		fmt.Println("")
+		fmt.Println("<|")
 	}
 	fmt.Println("")
 }
