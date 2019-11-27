@@ -10,6 +10,7 @@ var allParts []Part
 
 type Part struct {
 	Name     string
+	Path string
 	EndA     int
 	EndB     int
 	Parent   *Part
@@ -27,8 +28,20 @@ func main() {
 	root := Part{Name: "0/0"}
 	root.Children = getChildTree(root)
 
+	root.PrintAllBridges()
 	fmt.Println("asdf")
 }
+
+func (p Part)PrintAllBridges(){
+	if len(p.Children) == 0{
+		fmt.Println	(p.Path)
+		return
+	}
+	for _, c := range p.Children{
+		c.PrintAllBridges()
+	}
+}
+
 
 func (parent Part) HasUsed(name string) bool {
 	_, exists := parent.Children[name]
@@ -52,6 +65,7 @@ func getChildTree(this Part) map[string]Part {
 				this.EndA == p.EndB ||
 				this.EndB == p.EndA {
 				p.Parent = &this
+				p.Path = this.Path + " - " + p.Name
 				p.Children = getChildTree(p)
 				ret[p.Name] = p
 			}
