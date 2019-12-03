@@ -9,16 +9,21 @@ import (
 var allParts []Part
 
 type Part struct {
-	Name     string
-	Path string
-	EndA     int
-	EndB     int
-	Parent   *Part
-	Children map[string]Part
+	Name        string
+	Path        string
+	EndA        int
+	EndB        int
+	Parent      *Part
+	Children    map[string]Part
+	SumStrength int
+	Depth       int
 }
 
 func main() {
-	lines := fileToLines("example.txt")
+
+	// 1563 too low
+
+	lines := fileToLines("input.txt")
 
 	for _, line := range lines {
 		allParts = append(allParts, lineToPart(line))
@@ -26,47 +31,54 @@ func main() {
 	}
 
 	root := Part{Name: "0/0"}
-	root.Children = getChildTree(root)
+	root.Children = getChildTree(root, 1)
 
-	root.PrintAllBridges()
-	fmt.Println("asdf")
+	maxStrength, lastMaxDepth := root.PrintAllBridges(0, 0)
+	fmt.Println(maxStrength, lastMaxDepth)
 }
 
-func (p Part)PrintAllBridges(){
-	if len(p.Children) == 0{
-		fmt.Println	(p.Path)
-		return
+func (p Part) PrintAllBridges(lastMaxStrength, lastMaxDepth int) (int, int) {
+	if len(p.Children) == 0 {
+		if p.Depth > lastMaxDepth {
+			lastMaxDepth = p.Depth
+			lastMaxStrength = p.SumStrength
+		}
+		if p.Depth == lastMaxDepth {
+		if p.SumStrength > lastMaxStrength {
+			lastMaxStrength = p.SumStrength
+		}
 	}
-	for _, c := range p.Children{
-		c.PrintAllBridges()
+	
+		fmt.Printf("Strength: %d Length: %d Path: %s \n", p.SumStrength, p.Depth, p.Path)
+		return lastMaxStrength, lastMaxDepth
 	}
+	for _, c := range p.Children {
+		lastMaxStrength, lastMaxDepth = c.PrintAllBridges(lastMaxStrength, lastMaxDepth)
+	}
+	return lastMaxStrength, lastMaxDepth
 }
 
-
-func (parent Part) HasUsed(name string) bool {
-	_, exists := parent.Children[name]
-	if parent.Name == name {
-		return true
-	}
-	if exists {
-		return true
-	}
-	if parent.Name == "0/0" {
-		return false
-	}
-	return parent.Parent.HasUsed(name)
-}
-func getChildTree(this Part) map[string]Part {
+func getChildTree(this Part, depth int) map[string]Part {
 	ret := map[string]Part{}
 	for _, p := range allParts {
-		if !this.HasUsed(p.Name) {
-			if this.EndA == p.EndA ||
-				this.EndB == p.EndB ||
-				this.EndA == p.EndB ||
-				this.EndB == p.EndA {
+		if !strings.Contains(this.Path, p.Name) {
+			if this.EndB == p.EndA {
 				p.Parent = &this
 				p.Path = this.Path + " - " + p.Name
-				p.Children = getChildTree(p)
+				p.SumStrength = this.SumStrength + p.EndA + p.EndB
+				p.Depth = depth
+				p.Children = getChildTree(p, depth+1)
+
+				ret[p.Name] = p
+			}
+			if this.EndB == p.EndB {
+				p.Parent = &this
+				p.Path = this.Path + " - " + p.Name
+				p.EndB = p.EndA
+				p.EndA = this.EndB
+				p.SumStrength = this.SumStrength + p.EndA + p.EndB
+				p.Depth = depth
+				p.Children = getChildTree(p, depth+1)
 				ret[p.Name] = p
 			}
 		}
