@@ -16,12 +16,12 @@ type Part struct {
 	Parent      *Part
 	Children    map[string]Part
 	SumStrength int
+	Depth       int
 }
 
 func main() {
 
 	// 1563 too low
-
 
 	lines := fileToLines("input.txt")
 
@@ -31,35 +31,44 @@ func main() {
 	}
 
 	root := Part{Name: "0/0"}
-	root.Children = getChildTree(root)
+	root.Children = getChildTree(root, 1)
 
-	maxStrength := root.PrintAllBridges(0)
-	fmt.Println(maxStrength)
+	maxStrength, lastMaxDepth := root.PrintAllBridges(0, 0)
+	fmt.Println(maxStrength, lastMaxDepth)
 }
 
-func (p Part) PrintAllBridges(lastMaxStrength int) int {
+func (p Part) PrintAllBridges(lastMaxStrength, lastMaxDepth int) (int, int) {
 	if len(p.Children) == 0 {
-		if p.SumStrength > lastMaxStrength{
+		if p.Depth > lastMaxDepth {
+			lastMaxDepth = p.Depth
 			lastMaxStrength = p.SumStrength
 		}
-		fmt.Printf("Strength: %d Path: %s \n", p.SumStrength, p.Path)
-		return lastMaxStrength
+		if p.Depth == lastMaxDepth {
+		if p.SumStrength > lastMaxStrength {
+			lastMaxStrength = p.SumStrength
+		}
+	}
+	
+		fmt.Printf("Strength: %d Length: %d Path: %s \n", p.SumStrength, p.Depth, p.Path)
+		return lastMaxStrength, lastMaxDepth
 	}
 	for _, c := range p.Children {
-		lastMaxStrength = c.PrintAllBridges(lastMaxStrength)
+		lastMaxStrength, lastMaxDepth = c.PrintAllBridges(lastMaxStrength, lastMaxDepth)
 	}
-	return lastMaxStrength
+	return lastMaxStrength, lastMaxDepth
 }
 
-func getChildTree(this Part) map[string]Part {
+func getChildTree(this Part, depth int) map[string]Part {
 	ret := map[string]Part{}
 	for _, p := range allParts {
-		if !strings.Contains(this.Path, p.Name){
+		if !strings.Contains(this.Path, p.Name) {
 			if this.EndB == p.EndA {
 				p.Parent = &this
 				p.Path = this.Path + " - " + p.Name
 				p.SumStrength = this.SumStrength + p.EndA + p.EndB
-				p.Children = getChildTree(p)
+				p.Depth = depth
+				p.Children = getChildTree(p, depth+1)
+
 				ret[p.Name] = p
 			}
 			if this.EndB == p.EndB {
@@ -68,7 +77,8 @@ func getChildTree(this Part) map[string]Part {
 				p.EndB = p.EndA
 				p.EndA = this.EndB
 				p.SumStrength = this.SumStrength + p.EndA + p.EndB
-				p.Children = getChildTree(p)
+				p.Depth = depth
+				p.Children = getChildTree(p, depth+1)
 				ret[p.Name] = p
 			}
 		}
