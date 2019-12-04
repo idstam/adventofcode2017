@@ -14,8 +14,9 @@ type Point struct {
 }
 
 type Line struct {
-	A Point
-	B Point
+	A    Point
+	B    Point
+	Meta string
 }
 
 func (p Point) Name() string {

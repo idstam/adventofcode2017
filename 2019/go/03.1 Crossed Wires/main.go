@@ -11,23 +11,44 @@ import (
 
 func main() {
 
-	l1 := Line{Point{3, 3}, Point{3, 10}}
-	l2 := Line{Point{1, 5}, Point{5, 5}}
-
-	fmt.Println(l1.IntersectionStraight(l2))
-
-	lines := fileToLines("input.txt")
+	lines := fileToLines("example.txt")
 	linesA := InputLineToLines(lines[0])
 	linesB := InputLineToLines(lines[1])
 	//world = makeSquareStringMatrix(16000, "")
 	//DrawLines(linesA, "A")
 	//DrawLines(linesB, "B")
 	d := FindClosestIntersection(linesA, linesB)
+	fmt.Println(d)
 
+	d = FindShortestIntersection(linesA, linesB)
 	fmt.Println(d)
 
 }
-func FindClosestIntersection(linesA, linesB map[string]Line) int {
+
+func FindShortestIntersection(linesA, linesB []Line) int {
+	minDist := math.MaxInt32
+	distA := 0
+	for _, l1 := range linesA {
+		distB := 0
+		distA += Manhattan(l1.A.X, l1.A.Y, l1.B.X, l1.B.Y)
+		for _, l2 := range linesB {
+			distB += Manhattan(l2.A.X, l2.A.Y, l2.B.X, l2.B.Y)
+
+			intersects, p := l1.IntersectionStraight(l2)
+ta hänsyn till var de korsar
+			if intersects && Manhattan(0, 0, p.X, p.Y) != 0 {
+				dist := distA + distB
+				if dist != 0 && dist < minDist {
+					minDist = dist
+					fmt.Println(dist, l1.Meta, l2.Meta)
+				}
+			}
+		}
+	}
+	return minDist
+}
+
+func FindClosestIntersection(linesA, linesB []Line) int {
 	minDist := math.MaxInt32
 	for _, l1 := range linesA {
 		for _, l2 := range linesB {
@@ -43,9 +64,9 @@ func FindClosestIntersection(linesA, linesB map[string]Line) int {
 	return minDist
 }
 
-func InputLineToLines(line string) map[string]Line {
+func InputLineToLines(line string) []Line {
 	fmt.Println("LineToPoints")
-	ret := map[string]Line{}
+	ret := []Line{}
 	turns := strings.Split(line, ",")
 
 	x := 0
@@ -65,8 +86,8 @@ func InputLineToLines(line string) map[string]Line {
 		case "R":
 			x += dist
 		}
-		l := Line{a, Point{x, y}}
-		ret[strconv.Itoa(x)+":"+strconv.Itoa(y)] = l
+		l := Line{a, Point{x, y}, turn}
+		ret = append(ret, l)
 		//fmt.Printf("%s %s %d\n", turn, strconv.Itoa(x)+":"+strconv.Itoa(y), IntAbs(x)+IntAbs(y))
 	}
 	return ret
