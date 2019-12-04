@@ -11,7 +11,7 @@ import (
 
 func main() {
 
-	lines := fileToLines("example.txt")
+	lines := fileToLines("input.txt")
 	linesA := InputLineToLines(lines[0])
 	linesB := InputLineToLines(lines[1])
 	//world = makeSquareStringMatrix(16000, "")
@@ -30,20 +30,22 @@ func FindShortestIntersection(linesA, linesB []Line) int {
 	distA := 0
 	for _, l1 := range linesA {
 		distB := 0
-		distA += Manhattan(l1.A.X, l1.A.Y, l1.B.X, l1.B.Y)
-		for _, l2 := range linesB {
-			distB += Manhattan(l2.A.X, l2.A.Y, l2.B.X, l2.B.Y)
 
+		for _, l2 := range linesB {
 			intersects, p := l1.IntersectionStraight(l2)
-ta hänsyn till var de korsar
+
 			if intersects && Manhattan(0, 0, p.X, p.Y) != 0 {
 				dist := distA + distB
+				dist += p.Manhattan(l1.A)
+				dist += p.Manhattan(l2.A)
 				if dist != 0 && dist < minDist {
 					minDist = dist
 					fmt.Println(dist, l1.Meta, l2.Meta)
 				}
 			}
+			distB += Manhattan(l2.A.X, l2.A.Y, l2.B.X, l2.B.Y)
 		}
+		distA += Manhattan(l1.A.X, l1.A.Y, l1.B.X, l1.B.Y)
 	}
 	return minDist
 }
