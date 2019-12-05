@@ -9,7 +9,7 @@ import (
 var mem []int
 
 func main() {
-	lines := fileToLines("example.txt")
+	lines := fileToLines("input.txt")
 	strs := strings.Split(lines[0], ",")
 
 	mem = StringToIntArray(strs)
@@ -28,6 +28,7 @@ func Exec(ptr int) int {
 	fullOp := mem[ptr]
 	ma, mb, mc, op := ParseOpCode(fullOp)
 	a, b, c := GetValues(ma, mb, mc, ptr)
+	fmt.Println(op, ma, a, mb, b, mc, c)
 	val := 0
 	switch op {
 	case 1:
@@ -40,12 +41,14 @@ func Exec(ptr int) int {
 		mem[mem[ptr+1]] = GetInput()
 		ptr += 2
 	case 4:
-		val = GetValue(c, ptr)
+		val = GetValue(1, c)
 		fmt.Printf("Output: %d \n", val)
+		ptr += 2
 	case 99:
+		fmt.Println("Exit")
 		return -1
 	default:
-		panic("Unknown OP code")
+		log.Fatalf("Unknown OP Code %d \n", op)
 
 	}
 
@@ -59,10 +62,10 @@ func GetValues(ma, mb, mc, adress int) (int, int, int) {
 		a = GetValue(ma, adress+3)
 	}
 	if adress+2 < len(mem) {
-		b = GetValue(ma, adress+2)
+		b = GetValue(mb, adress+2)
 	}
 	if adress+1 < len(mem) {
-		b = GetValue(ma, adress+1)
+		c = GetValue(mc, adress+1)
 	}
 	return a, b, c
 }
@@ -73,8 +76,10 @@ func GetValue(mode, adress int) int {
 	if mode == 1 {
 		return mem[adress]
 	}
+
 	if mem[adress] >= len(mem) {
-		log.Fatalf("index out of range index:%d(%d) len:%d", mem[adress], adress, len(mem))
+		log.Printf("index out of range index:%d(%d) len:%d", mem[adress], adress, len(mem))
+		return 0
 	}
 
 	return mem[mem[adress]]
@@ -86,10 +91,10 @@ func GetInput() int {
 func ParseOpCode(in int) (int, int, int, int) {
 	op := in % 100
 	in -= op
-	c := in % 1000
+	c := (in % 1000) / 100
 	in -= c
-	b := in % 10000
+	b := (in % 10000) / 1000
 	in -= b
-	a := in % 100000
+	a := (in % 100000) / 10000
 	return a, b, c, op
 }
