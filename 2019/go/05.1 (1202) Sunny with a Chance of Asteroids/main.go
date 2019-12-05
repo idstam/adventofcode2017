@@ -26,34 +26,34 @@ func main() {
 
 func Exec(ptr int) int {
 	fullOp := mem[ptr]
-	ma, mb, mc, op := ParseOpCode(fullOp)
+	_, mb, mc, op := ParseOpCode(fullOp)
 	if op == 99{
 		fmt.Println("Exit")
 		return -1
 	}
 	v1, v2, v3 := GetValues(ptr)
-	fmt.Println(OpName(op), ": ", v1,mc, v2,mb, v3,ma)
+	//fmt.Println(OpName(op), ": ", v1,mc, v2,mb, v3,ma)
 	//fmt.Println("Before 225:", mem[225])
-	val := []int{}
+
 	switch op {
 	case 1:
-		dest := v3[0]
+		dest := v3[1]
 		ExpandTape(dest + 1)
 		mem[dest] = v1[mc] + v2[mb]
 		ptr += 4
 	case 2:
-		dest := v3[0]
+		dest := v3[1]
 		ExpandTape(dest + 1)
 		mem[dest] = v1[mc] * v2[mb]
 		ptr += 4
 	case 3:
-		dest := v1[0]
+		dest := v1[1]
 		ExpandTape(dest + 1)
 		mem[dest] = GetInput()
 		ptr += 2
 	case 4:
-		val = GetValue(v1[mc])
-		fmt.Printf("Output: %d \n", val[mc])
+		val := v1[mc]
+		fmt.Printf("Output: %d \n", val)
 		ptr += 2
 	case 99:
 		fmt.Println("Exit")
@@ -102,10 +102,12 @@ func GetValues(adress int) ([]int, []int, []int) {
 }
 func GetValue(adress int) []int {
 	ExpandTape(IntMax(adress, mem[adress]) + 1)
-
+	ret := -9999999
 	from := mem[adress]
-	ret := mem[from]
-	return []int{mem[adress], ret}
+	if from >= 0 {
+		ret = mem[from]
+	}
+	return []int{ret, mem[adress]}
 
 }
 func GetInput() int {
