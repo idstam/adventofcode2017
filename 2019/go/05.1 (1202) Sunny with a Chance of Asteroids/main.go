@@ -27,22 +27,33 @@ func main() {
 func Exec(ptr int) int {
 	fullOp := mem[ptr]
 	ma, mb, mc, op := ParseOpCode(fullOp)
-	a, b, c := GetValues(ma, mb, mc, ptr)
-	fmt.Println(op, ma, a, mb, b, mc, c)
-	val := 0
+	if op == 99{
+		fmt.Println("Exit")
+		return -1
+	}
+	v1, v2, v3 := GetValues(ptr)
+	fmt.Println(OpName(op), ": ", v1,mc, v2,mb, v3,ma)
+	//fmt.Println("Before 225:", mem[225])
+	val := []int{}
 	switch op {
 	case 1:
-		mem[mem[ptr+3]] = a + b
+		dest := v3[0]
+		ExpandTape(dest + 1)
+		mem[dest] = v1[mc] + v2[mb]
 		ptr += 4
 	case 2:
-		mem[mem[ptr+3]] = a * b
+		dest := v3[0]
+		ExpandTape(dest + 1)
+		mem[dest] = v1[mc] * v2[mb]
 		ptr += 4
 	case 3:
-		mem[mem[ptr+1]] = GetInput()
+		dest := v1[0]
+		ExpandTape(dest + 1)
+		mem[dest] = GetInput()
 		ptr += 2
 	case 4:
-		val = GetValue(1, c)
-		fmt.Printf("Output: %d \n", val)
+		val = GetValue(v1[mc])
+		fmt.Printf("Output: %d \n", val[mc])
 		ptr += 2
 	case 99:
 		fmt.Println("Exit")
@@ -51,38 +62,51 @@ func Exec(ptr int) int {
 		log.Fatalf("Unknown OP Code %d \n", op)
 
 	}
-
+	//fmt.Println("After 225:", mem[225])
 	return ptr
 }
-func GetValues(ma, mb, mc, adress int) (int, int, int) {
-	a := 0
-	b := 0
-	c := 0
-	if adress+3 < len(mem) {
-		a = GetValue(ma, adress+3)
+func OpName(op int) string {
+	switch op {
+	case 1:
+		return "Add a+b -> c"
+	case 2:
+		return "Add a*b -> c"
+	case 3:
+		return "Input -> a"
+	case 4:
+		return "Output a"
+	case 99:
+		return "Exit"
+	default:
+		return fmt.Sprintf("UNKNOWN %d", op)
+
 	}
-	if adress+2 < len(mem) {
-		b = GetValue(mb, adress+2)
-	}
-	if adress+1 < len(mem) {
-		c = GetValue(mc, adress+1)
-	}
-	return a, b, c
 }
-func GetValue(mode, adress int) int {
-	if adress >= len(mem) {
-		log.Fatalf("index out of range index:%d len:%d", adress, len(mem))
-	}
-	if mode == 1 {
-		return mem[adress]
+func ExpandTape(newSize int) {
+	if len(mem) >= newSize {
+		return
 	}
 
-	if mem[adress] >= len(mem) {
-		log.Printf("index out of range index:%d(%d) len:%d", mem[adress], adress, len(mem))
-		return 0
+	for i := len(mem); i <= newSize; i++ {
+		mem = append(mem, 0)
 	}
+}
+func GetValues(adress int) ([]int, []int, []int) {
+	v1 := []int{0, 0}
+	v2 := []int{0, 0}
+	v3 := []int{0, 0}
+	v1 = GetValue(adress + 1)
+	v2 = GetValue(adress + 2)
+	v3 = GetValue(adress + 3)
+	return v1,v2,v3
+}
+func GetValue(adress int) []int {
+	ExpandTape(IntMax(adress, mem[adress]) + 1)
 
-	return mem[mem[adress]]
+	from := mem[adress]
+	ret := mem[from]
+	return []int{mem[adress], ret}
+
 }
 func GetInput() int {
 	return 1
@@ -92,9 +116,9 @@ func ParseOpCode(in int) (int, int, int, int) {
 	op := in % 100
 	in -= op
 	c := (in % 1000) / 100
-	in -= c
+	in -= c * 100
 	b := (in % 10000) / 1000
-	in -= b
+	in -= b * 1000
 	a := (in % 100000) / 10000
 	return a, b, c, op
 }
