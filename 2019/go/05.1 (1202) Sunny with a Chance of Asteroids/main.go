@@ -17,17 +17,16 @@ func main() {
 	ptr := 0
 	for ptr >= 0 {
 		ptr = Exec(ptr)
-
 	}
-
-	//Too low: 29891
-	//fmt.Println(mem[0])
 }
 
+func GetInput() int {
+	return 5
+}
 func Exec(ptr int) int {
 	fullOp := mem[ptr]
 	_, mb, mc, op := ParseOpCode(fullOp)
-	if op == 99{
+	if op == 99 {
 		fmt.Println("Exit")
 		return -1
 	}
@@ -55,6 +54,39 @@ func Exec(ptr int) int {
 		val := v1[mc]
 		fmt.Printf("Output: %d \n", val)
 		ptr += 2
+	case 5:
+		if v1[mc] != 0 {
+			ptr = v2[mb]
+		} else {
+			ptr += 3
+		}
+	case 6:
+		if v1[mc] == 0 {
+			ptr = v2[mb]
+		} else {
+			ptr += 3
+		}
+	case 7:
+		dest := v3[1]
+		ExpandTape(dest + 1)
+
+		if v1[mc] < v2[mb] {
+			mem[dest] = 1
+		} else {
+			mem[dest] = 0
+		}
+		ptr += 4
+	case 8:
+		dest := v3[1]
+		ExpandTape(dest + 1)
+
+		if v1[mc] == v2[mb] {
+			mem[dest] = 1
+		} else {
+			mem[dest] = 0
+		}
+		ptr += 4
+
 	case 99:
 		fmt.Println("Exit")
 		return -1
@@ -75,6 +107,14 @@ func OpName(op int) string {
 		return "Input -> a"
 	case 4:
 		return "Output a"
+	case 5:
+		return "JIT a=!0 => b"
+	case 6:
+		return "JIF a==0 => b"
+	case 7:
+		return "LT a < b -> c"
+	case 8:
+		return "EQ a == b -> c"
 	case 99:
 		return "Exit"
 	default:
@@ -98,7 +138,7 @@ func GetValues(adress int) ([]int, []int, []int) {
 	v1 = GetValue(adress + 1)
 	v2 = GetValue(adress + 2)
 	v3 = GetValue(adress + 3)
-	return v1,v2,v3
+	return v1, v2, v3
 }
 func GetValue(adress int) []int {
 	ExpandTape(IntMax(adress, mem[adress]) + 1)
@@ -109,9 +149,6 @@ func GetValue(adress int) []int {
 	}
 	return []int{ret, mem[adress]}
 
-}
-func GetInput() int {
-	return 1
 }
 
 func ParseOpCode(in int) (int, int, int, int) {

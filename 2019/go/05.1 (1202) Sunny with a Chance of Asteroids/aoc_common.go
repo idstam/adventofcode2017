@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 )
 
 type Point struct {
@@ -158,7 +159,7 @@ func dumpStringMatrix(matrix [][]string, caption string) {
 func StringToIntArray(in []string) []int {
 	ret := []int{}
 	for _, s := range in {
-		i, err := strconv.Atoi(s)
+		i, err := strconv.Atoi(strings.TrimSpace(s))
 		if err != nil {
 			i = 0
 		}
