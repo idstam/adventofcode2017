@@ -252,6 +252,9 @@ func IntPushArray(i int, a []int) []int {
 	return append([]int{i}, a...)
 }
 func IntPopArray(a []int) (int, []int) {
+	if len(a) == 0 {
+		log.Fatal("Trying to POP empty array")
+	}
 	val := a[0]
 	return val, IntRemoveFromSlice(0, a)
 }
