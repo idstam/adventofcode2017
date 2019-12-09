@@ -6,20 +6,27 @@ import (
 )
 
 type VM1202 struct {
-	Name   string
-	mem    []int
-	output chan int
-	inputs chan int
-	ioMode string
-	ptr    int
+	Name       string
+	mem        []int
+	Output     chan int
+	LastOutput int
+	Input      chan int
+	InputMode  string
+	OutputMode string
+	LogLevel   int
+
+	State string
+	ptr int
 }
 
 func (vm *VM1202) Run() {
-	fmt.Println(vm.Name, "RUN")
+	vm.Log(1, vm.Name, "RUN")
+	vm.State = "Running"
 	ptr := 0
 	for ptr >= 0 {
 		ptr = vm.Exec(ptr)
 	}
+	vm.State = "Done"
 }
 func (vm *VM1202) Exec(ptr int) int {
 	fullOp := vm.mem[ptr]
@@ -86,7 +93,7 @@ func (vm *VM1202) Exec(ptr int) int {
 		vm.ptr += 4
 
 	case 99:
-		fmt.Println("Exit")
+		vm.Log(1, "Exit")
 		return -1
 	default:
 		log.Fatalf("Unknown OP Code %d \n", op)
@@ -149,32 +156,34 @@ func (vm *VM1202) GetValue(adress int) []int {
 
 }
 func (vm *VM1202) GetInput() int {
-	fmt.Println(vm.Name, "GetInput", "in")
+	vm.Log(0, vm.Name, "GetInput", "in")
 	ret := 0
 
-	switch vm.ioMode {
+	switch vm.InputMode {
 	case "Console":
 		fmt.Scanf("%d", &ret)
 	case "Channel":
-		ret = <-vm.inputs
+		ret = <-vm.Input
 	default:
-		log.Panic("UNKNOWN IO MODE " + vm.ioMode)
+		log.Panic("UNKNOWN INPUT MODE " + vm.InputMode)
 	}
 
-	fmt.Println(vm.Name, "GetInput", "out", ret)
+	vm.Log(0, vm.Name, "GetInput", "out", ret)
 	return ret
 }
 func (vm *VM1202) SendOutput(val int) {
-	fmt.Println(vm.Name, "SendOutput", "in", val)
-	switch vm.ioMode {
+	vm.Log(0, vm.Name, "SendOutput", vm.OutputMode, "in", val)
+	vm.LastOutput = val
+	switch vm.OutputMode {
 	case "Console":
 		fmt.Println(vm.Name, "SendOutput", "->", val)
 	case "Channel":
-		vm.output <- val
+		vm.Output <- val
+	case "Silent":
 	default:
-		log.Panic("UNKNOWN IO MODE " + vm.ioMode)
+		log.Panic("UNKNOWN OUTPUT MODE " + vm.OutputMode)
 	}
-	fmt.Println(vm.Name, "SendOutput", "out")
+	vm.Log(0, vm.Name, "SendOutput", vm.OutputMode, "out")
 
 }
 func (vm *VM1202) ParseOpCode(in int) (int, int, int, int) {
@@ -186,4 +195,9 @@ func (vm *VM1202) ParseOpCode(in int) (int, int, int, int) {
 	in -= b * 1000
 	a := (in % 100000) / 10000
 	return a, b, c, op
+}
+func (vm *VM1202)Log(level int, message ...interface{}){
+	if level >= vm.LogLevel{
+		fmt.Println(message)
+	}
 }
