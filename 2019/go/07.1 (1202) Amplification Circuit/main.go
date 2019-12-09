@@ -28,19 +28,20 @@ func main() {
 				mem:  StringToIntArray(strs),
 			}
 			vm.inputs = make(chan int, 100)
-			vm.output = make(chan int, 100)
+			vm.output = make(chan int)
+			vm.ioMode = "Console"
 			vm.inputs <- phase
 
 			if i < len(vms)-1 {
-
 				vms[i+1].inputs = vm.output
 			}
 
 			vms = append(vms, vm)
 		}
+		vms[0].inputs <- 0
 
 		wg := sync.WaitGroup{}
-		wg.Add(len(phases))
+		wg.Add(len(phases) - 1)
 		out := make(chan int)
 
 		for _, vm := range vms {
