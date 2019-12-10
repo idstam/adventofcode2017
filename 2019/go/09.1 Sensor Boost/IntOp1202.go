@@ -7,28 +7,27 @@ import (
 
 type VM1202 struct {
 	Name         string
-	mem          []int
-	Output       chan int
-	LastOutput   int
-	Input        chan int
+	mem          []int64
+	Output       chan int64
+	LastOutput   int64
+	Input        chan int64
 	InputMode    string
 	OutputMode   string
 	LogLevel     int
-	relativeBase int
+	relativeBase int64
 	State        string
-	ptr          int
 }
 
 func (vm *VM1202) Run() {
 	vm.Log(1, vm.Name, "RUN")
 	vm.State = "Running"
-	ptr := 0
+	ptr := int64(0)
 	for ptr >= 0 {
 		ptr = vm.Exec(ptr)
 	}
 	vm.State = "Done"
 }
-func (vm *VM1202) Exec(ptr int) int {
+func (vm *VM1202) Exec(ptr int64) int64 {
 	fullOp := vm.mem[ptr]
 	_, mb, mc, op := vm.ParseOpCode(fullOp)
 	if op == 99 {
@@ -80,7 +79,7 @@ func (vm *VM1202) Exec(ptr int) int {
 		} else {
 			vm.mem[dest] = 0
 		}
-		vm.ptr += 4
+		ptr += 4
 	case 8:
 		dest := v3[1]
 		vm.ExpandTape(dest + 1)
@@ -90,12 +89,12 @@ func (vm *VM1202) Exec(ptr int) int {
 		} else {
 			vm.mem[dest] = 0
 		}
-		vm.ptr += 4
+		ptr += 4
 
 	case 9:
 		val := v1[mc]
 		vm.relativeBase += val
-		vm.ptr += 2
+		ptr += 2
 	case 99:
 		vm.Log(1, "Exit")
 		return -1
@@ -106,7 +105,7 @@ func (vm *VM1202) Exec(ptr int) int {
 	//fmt.Println("After 225:", mem[225])
 	return ptr
 }
-func (vm *VM1202) OpName(op int) string {
+func (vm *VM1202) OpName(op int64) string {
 	switch op {
 	case 1:
 		return "Add a+b -> c"
@@ -124,6 +123,8 @@ func (vm *VM1202) OpName(op int) string {
 		return "LT a < b -> c"
 	case 8:
 		return "EQ a == b -> c"
+	case 9:
+		return "Change relative base with a"
 	case 99:
 		return "Exit"
 	default:
@@ -131,37 +132,44 @@ func (vm *VM1202) OpName(op int) string {
 
 	}
 }
-func (vm *VM1202) ExpandTape(newSize int) {
-	if len(vm.mem) >= newSize {
+func (vm *VM1202) ExpandTape(newSize int64) {
+	if int64(len(vm.mem)) >= newSize {
 		return
 	}
 
-	for i := len(vm.mem); i <= newSize; i++ {
+	for i := int64(len(vm.mem)); i <= newSize; i++ {
 		vm.mem = append(vm.mem, 0)
 	}
 }
-func (vm *VM1202) GetValues(adress int) ([]int, []int, []int) {
-	v1 := []int{0, 0}
-	v2 := []int{0, 0}
-	v3 := []int{0, 0}
+func (vm *VM1202) GetValues(adress int64) ([]int64, []int64, []int64) {
+	v1 := []int64{0, 0}
+	v2 := []int64{0, 0}
+	v3 := []int64{0, 0}
 	v1 = vm.GetValue(adress + 1)
 	v2 = vm.GetValue(adress + 2)
 	v3 = vm.GetValue(adress + 3)
 	return v1, v2, v3
 }
-func (vm *VM1202) GetValue(adress int) []int {
-	vm.ExpandTape(IntMax(adress, vm.mem[adress]) + 1)
-	ret := -9999999
+func (vm *VM1202) GetValue(adress int64) []int64 {
+	vm.ExpandTape(Int64Max(adress, vm.mem[adress], adress+vm.relativeBase) + 1)
+	ret := int64(0)
+	ret2 := int64(0)
+
 	from := vm.mem[adress]
 	if from >= 0 {
 		ret = vm.mem[from]
 	}
-	return []int{ret, vm.mem[adress]}
+
+	from = vm.mem[adress+vm.relativeBase]
+	if from >= 0 {
+		ret2 = vm.mem[from]
+	}
+	return []int64{ret, vm.mem[adress], ret2}
 
 }
-func (vm *VM1202) GetInput() int {
+func (vm *VM1202) GetInput() int64 {
 	vm.Log(0, vm.Name, "GetInput", "in")
-	ret := 0
+	ret := int64(0)
 
 	switch vm.InputMode {
 	case "Console":
@@ -175,7 +183,7 @@ func (vm *VM1202) GetInput() int {
 	vm.Log(0, vm.Name, "GetInput", "out", ret)
 	return ret
 }
-func (vm *VM1202) SendOutput(val int) {
+func (vm *VM1202) SendOutput(val int64) {
 	vm.Log(0, vm.Name, "SendOutput", vm.OutputMode, "in", val)
 	vm.LastOutput = val
 	switch vm.OutputMode {
@@ -190,7 +198,7 @@ func (vm *VM1202) SendOutput(val int) {
 	vm.Log(0, vm.Name, "SendOutput", vm.OutputMode, "out")
 
 }
-func (vm *VM1202) ParseOpCode(in int) (int, int, int, int) {
+func (vm *VM1202) ParseOpCode(in int64) (int64, int64, int64, int64) {
 	op := in % 100
 	in -= op
 	c := (in % 1000) / 100

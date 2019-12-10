@@ -168,6 +168,18 @@ func StringToIntArray(in []string) []int {
 
 	return ret
 }
+func StringToInt64Array(in []string) []int64 {
+	ret := []int64{}
+	for _, s := range in {
+		i, err := strconv.Atoi(strings.TrimSpace(s))
+		if err != nil {
+			i = 0
+		}
+		ret = append(ret, int64(i))
+	}
+
+	return ret
+}
 func SumIntArray(in []int) int {
 	ret := 0
 	for _, i := range in {
@@ -207,14 +219,35 @@ func IntMin(a, b int) int {
 	}
 	return b
 }
-func IntMax(a, b int) int {
-	if a >= b {
+func IntMax(in ...int) int {
+	m := in[0]
+	for _, i := range in {
+		if i > m {
+			m = i
+		}
+	}
+	return m
+}
+func Int64Min(a, b int64) int64 {
+	if a <= b {
 		return a
 	}
 	return b
 }
+func Int64Max(in ...int64) int64 {
+	m := in[0]
+	for _, i := range in {
+		if i > m {
+			m = i
+		}
+	}
+	return m
+}
 func IntBetween(p, a, b int) bool {
 	return p >= IntMin(a, b) && p <= IntMax(a, b)
+}
+func Int64Between(p, a, b int64) bool {
+	return p >= Int64Min(a, b) && p <= Int64Max(a, b)
 }
 func (a Point) Manhattan(b Point) int {
 	return Manhattan(a.X, a.Y, b.X, b.Y)
