@@ -3,7 +3,7 @@ package main
 import "fmt"
 
 func main() {
-	lines := fileToLines("input.txt")
+	lines := fileToLines("example.txt")
 	m := [][]string{}
 	for _, l := range lines {
 		m = append(m, StringToSlice(l))
