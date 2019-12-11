@@ -6,7 +6,7 @@ import (
 
 func main() {
 
-	lines := fileToLines("example.txt")
+	lines := fileToLines("input.txt")
 	strs := strings.Split(lines[0], ",")
 
 	vm := VM1202{
@@ -16,9 +16,9 @@ func main() {
 	vm.Input = make(chan int64, 2)
 	vm.Output = make(chan int64)
 	vm.OutputMode = "Console"
-	vm.InputMode = "Console"
+	vm.InputMode = "Channel"
 	vm.LogLevel = 99
-
+	vm.Input <- 1
 	vm.Run()
 	//vm.inputs <- phase
 

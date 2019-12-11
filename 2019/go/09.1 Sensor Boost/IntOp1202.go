@@ -29,62 +29,95 @@ func (vm *VM1202) Run() {
 }
 func (vm *VM1202) Exec(ptr int64) int64 {
 	fullOp := vm.mem[ptr]
-	_, mb, mc, op := vm.ParseOpCode(fullOp)
+	ma, mb, mc, op := vm.ParseOpCode(fullOp)
 	if op == 99 {
 		//fmt.Println("Exit")
 		return -1
 	}
-	v1, v2, v3 := vm.GetValues(ptr)
-	//fmt.Println(OpName(op), ": ", v1,mc, v2,mb, v3,ma)
-	//fmt.Println("Before 225:", mem[225])
-
 	switch op {
 	case 1:
-		dest := v3[1]
+		v1 := vm.GetValue(ptr+1, mc)
+		v2 := vm.GetValue(ptr+2, mb)
+		v3 := vm.GetValue(ptr+3, 1)
+		dest := v3
+		if ma == 2 {
+			dest += vm.relativeBase
+		}
+
 		vm.ExpandTape(dest + 1)
-		vm.mem[dest] = v1[mc] + v2[mb]
+		vm.mem[dest] = v1 + v2
 		ptr += 4
 	case 2:
-		dest := v3[1]
+		v1 := vm.GetValue(ptr+1, mc)
+		v2 := vm.GetValue(ptr+2, mb)
+		v3 := vm.GetValue(ptr+3, 1)
+		dest := v3
+		if ma == 2 {
+			dest += vm.relativeBase
+		}
+
 		vm.ExpandTape(dest + 1)
-		vm.mem[dest] = v1[mc] * v2[mb]
+		vm.mem[dest] = v1 * v2
 		ptr += 4
 	case 3:
-		dest := v1[1]
+		v1 := vm.GetValue(ptr+1, 1)
+		dest := v1
+		if mc == 2 {
+			dest += vm.relativeBase
+		}
 		vm.ExpandTape(dest + 1)
 		vm.mem[dest] = vm.GetInput()
 		ptr += 2
 	case 4:
-		val := v1[mc]
+		v1 := vm.GetValue(ptr+1, mc)
+		val := v1
 		vm.SendOutput(val)
 		ptr += 2
 	case 5:
-		if v1[mc] != 0 {
-			ptr = v2[mb]
+		v1 := vm.GetValue(ptr+1, mc)
+		v2 := vm.GetValue(ptr+2, mb)
+		if v1 != 0 {
+			ptr = v2
 		} else {
 			ptr += 3
 		}
 	case 6:
-		if v1[mc] == 0 {
-			ptr = v2[mb]
+		v1 := vm.GetValue(ptr+1, mc)
+		v2 := vm.GetValue(ptr+2, mb)
+		if v1 == 0 {
+			ptr = v2
 		} else {
 			ptr += 3
 		}
 	case 7:
-		dest := v3[1]
+		v1 := vm.GetValue(ptr+1, mc)
+		v2 := vm.GetValue(ptr+2, mb)
+		v3 := vm.GetValue(ptr+3, 1)
+
+		dest := v3
+		if ma == 2 {
+			dest += vm.relativeBase
+		}
 		vm.ExpandTape(dest + 1)
 
-		if v1[mc] < v2[mb] {
+		if v1 < v2 {
 			vm.mem[dest] = 1
 		} else {
 			vm.mem[dest] = 0
 		}
 		ptr += 4
 	case 8:
-		dest := v3[1]
+		v1 := vm.GetValue(ptr+1, mc)
+		v2 := vm.GetValue(ptr+2, mb)
+		v3 := vm.GetValue(ptr+3, 1)
+		dest := v3
+		if ma == 2 {
+			dest += vm.relativeBase
+		}
+
 		vm.ExpandTape(dest + 1)
 
-		if v1[mc] == v2[mb] {
+		if v1 == v2 {
 			vm.mem[dest] = 1
 		} else {
 			vm.mem[dest] = 0
@@ -92,7 +125,8 @@ func (vm *VM1202) Exec(ptr int64) int64 {
 		ptr += 4
 
 	case 9:
-		val := v1[mc]
+		v1 := vm.GetValue(ptr+1, mc)
+		val := v1
 		vm.relativeBase += val
 		ptr += 2
 	case 99:
@@ -141,31 +175,29 @@ func (vm *VM1202) ExpandTape(newSize int64) {
 		vm.mem = append(vm.mem, 0)
 	}
 }
-func (vm *VM1202) GetValues(adress int64) ([]int64, []int64, []int64) {
-	v1 := []int64{0, 0}
-	v2 := []int64{0, 0}
-	v3 := []int64{0, 0}
-	v1 = vm.GetValue(adress + 1)
-	v2 = vm.GetValue(adress + 2)
-	v3 = vm.GetValue(adress + 3)
-	return v1, v2, v3
-}
-func (vm *VM1202) GetValue(adress int64) []int64 {
-	vm.ExpandTape(Int64Max(adress, vm.mem[adress], vm.mem[adress]+vm.relativeBase) + 1)
+
+func (vm *VM1202) GetValue(adress int64, mode int64) int64 {
 	ret := int64(0)
-	ret2 := int64(0)
+	from := int64(0)
 
-	from := vm.mem[adress]
-	if from >= 0 {
-		ret = vm.mem[from]
+	switch mode {
+	case 0:
+		from = vm.mem[adress]
+		vm.ExpandTape(from)
+		if from >= 0 {
+			ret = vm.mem[from]
+		}
+	case 1:
+		vm.ExpandTape(adress)
+		ret = vm.mem[adress]
+	case 2:
+		from = vm.mem[adress] + vm.relativeBase
+		vm.ExpandTape(from)
+		if from >= 0 {
+			ret = vm.mem[from]
+		}
 	}
-
-	from = vm.mem[adress] + vm.relativeBase
-	if from >= 0 {
-		ret2 = vm.mem[from]
-	}
-	return []int64{ret, vm.mem[adress], ret2}
-
+	return ret
 }
 func (vm *VM1202) GetInput() int64 {
 	vm.Log(0, vm.Name, "GetInput", "in")
