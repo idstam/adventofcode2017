@@ -151,7 +151,7 @@ func (vm *VM1202) GetValues(adress int64) ([]int64, []int64, []int64) {
 	return v1, v2, v3
 }
 func (vm *VM1202) GetValue(adress int64) []int64 {
-	vm.ExpandTape(Int64Max(adress, vm.mem[adress], adress+vm.relativeBase) + 1)
+	vm.ExpandTape(Int64Max(adress, vm.mem[adress], vm.mem[adress]+vm.relativeBase) + 1)
 	ret := int64(0)
 	ret2 := int64(0)
 
@@ -160,7 +160,7 @@ func (vm *VM1202) GetValue(adress int64) []int64 {
 		ret = vm.mem[from]
 	}
 
-	from = vm.mem[adress+vm.relativeBase]
+	from = vm.mem[adress] + vm.relativeBase
 	if from >= 0 {
 		ret2 = vm.mem[from]
 	}
