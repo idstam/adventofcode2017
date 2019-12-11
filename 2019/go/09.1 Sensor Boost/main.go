@@ -18,7 +18,8 @@ func main() {
 	vm.OutputMode = "Console"
 	vm.InputMode = "Channel"
 	vm.LogLevel = 99
-	vm.Input <- 1
+	//vm.Input <- 1
+	vm.Input <- 2
 	vm.Run()
 	//vm.inputs <- phase
 
