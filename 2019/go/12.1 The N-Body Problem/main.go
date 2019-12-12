@@ -15,7 +15,7 @@ func main() {
 	lines := fileToLines("input.txt")
 	moons := LinesToMoons(lines)
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 1000; i++ {
 		moons = UpdateVelocity(moons)
 		//fmt.Println(moons)
 		moons = UpdatePosition(moons)
