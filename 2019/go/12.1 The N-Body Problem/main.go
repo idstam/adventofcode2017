@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+
 	"strconv"
 	"strings"
 )
@@ -12,10 +13,14 @@ type Moon struct {
 }
 
 func main() {
+
+	//fmt.Println(LCM(4, 3, 2))
+
 	lines := fileToLines("input.txt")
+	original := LinesToMoons(lines)
 	moons := LinesToMoons(lines)
 
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < 10; i++ {
 		moons = UpdateVelocity(moons)
 		//fmt.Println(moons)
 		moons = UpdatePosition(moons)
@@ -24,7 +29,97 @@ func main() {
 	e := SumEnergy(moons)
 	fmt.Println(e)
 
+	xRepeat := 0
+	yRepeat := 0
+	zRepeat := 0
+
+	i := 2
+	moons = LinesToMoons(lines)
+	for xRepeat == 0 || yRepeat == 0 || zRepeat == 0 {
+
+		moons = UpdateVelocity(moons)
+		moons = UpdatePosition(moons)
+		if xRepeat == 0 {
+			xRepeat = IsBackAtStartX(original, moons, i)
+		}
+		if yRepeat == 0 {
+			yRepeat = IsBackAtStartY(original, moons, i)
+		}
+		if zRepeat == 0 {
+			zRepeat = IsBackAtStartZ(original, moons, i)
+		}
+		i++
+	}
+
+	fmt.Println(xRepeat, yRepeat, zRepeat)
+	fmt.Println(LCM(int64(xRepeat), int64(yRepeat), int64(zRepeat)))
+
 }
+
+func LCM(in ...int64) int64 {
+	if len(in) == 2 {
+		return LCM2(in[0], in[1])
+	}
+	lcm := in[0]
+	for i := 1; i < len(in); i++ {
+		lcm = LCM2(lcm, in[i])
+	}
+
+	return lcm
+}
+
+func LCM2(a, b int64) int64 {
+
+	gfA := factors(a)
+	gfB := factors(b)
+	cf := commonFactor(gfA, gfB)
+	return (a * b) / cf
+}
+func commonFactor(a, b []int64) int64 {
+	for _, af := range a {
+		for _, bf := range b {
+			if af == bf {
+				return af
+			}
+		}
+	}
+	return 1
+}
+func factors(a int64) []int64 {
+	ret := []int64{}
+	for i := a; i > 0; i-- {
+		if a%i == 0 {
+			ret = append(ret, i)
+		}
+	}
+	return ret
+}
+func IsBackAtStartX(original, moons []Moon, ret int) int {
+	for i, o := range original {
+		if o.P.X != moons[i].P.X {
+			return 0
+		}
+	}
+	return ret
+}
+
+func IsBackAtStartY(original, moons []Moon, ret int) int {
+	for i, o := range original {
+		if o.P.Y != moons[i].P.Y {
+			return 0
+		}
+	}
+	return ret
+}
+func IsBackAtStartZ(original, moons []Moon, ret int) int {
+	for i, o := range original {
+		if o.P.Z != moons[i].P.Z {
+			return 0
+		}
+	}
+	return ret
+}
+
 func SumEnergy(moons []Moon) int {
 	ret := 0
 	for _, m := range moons {

@@ -209,11 +209,29 @@ func IntMin(a, b int) int {
 	}
 	return b
 }
-func IntMax(a, b int) int {
-	if a >= b {
+func IntMax(in ...int) int {
+	m := in[0]
+	for _, i := range in {
+		if i > m {
+			m = i
+		}
+	}
+	return m
+}
+func Int64Min(a, b int64) int64 {
+	if a <= b {
 		return a
 	}
 	return b
+}
+func Int64Max(in ...int64) int64 {
+	m := in[0]
+	for _, i := range in {
+		if i > m {
+			m = i
+		}
+	}
+	return m
 }
 func IntBetween(p, a, b int) bool {
 	return p >= IntMin(a, b) && p <= IntMax(a, b)
