@@ -14,19 +14,24 @@ func main() {
 		InputMode:  "Channel",
 		OutputMode: "Channel",
 		mem:        StringArrayToInt64Map(numbers),
+		LogLevel:   99,
 	}
 
-	go vm.Run()
+	vm.Input = make(chan int64, 2)
+	vm.Output = make(chan int64)
 
+	go vm.Run()
+	vm.Input <- 0
 	screen := map[string]Int64Point{}
+
 	for vm.State != "Done" {
-		time.Sleep(time.Second)
 		t := Int64Point{}
 		t.X = <-vm.Output
 		t.Y = <-vm.Output
 		t.Z = <-vm.Output
 
 		screen[t.Name()] = t
+		time.Sleep(time.Millisecond)
 	}
 	count := 0
 	for _, t := range screen {
