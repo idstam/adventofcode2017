@@ -7,67 +7,109 @@ import (
 	"strings"
 )
 
-var recepies map[string]string
-var restChems map[string]int
+var recepies map[string]Recepie
+var restChems map[string]int64
+
+type RecepieLine struct {
+	Amount   int64
+	Chemical string
+	IsOre    bool
+	Original string
+}
+
+type Recepie struct {
+	Result         string
+	ResultAmount   int64
+	ResultChemical string
+	Lines          []RecepieLine
+}
 
 func main() {
+
 	lines := FileToLines("example.txt")
 
-	recepies = map[string]string{}
-	restChems = map[string]int{}
+	recepies = map[string]Recepie{}
+	restChems = map[string]int64{}
 	for _, line := range lines {
 		line = strings.ReplaceAll(line, ">", "")
 		recepieTokens := strings.Split(line, "=")
+
 		result := strings.TrimSpace(recepieTokens[1])
 		recepie := strings.TrimSpace(recepieTokens[0])
-		recepies[result] = recepie
-	}
 
-	demand := GetDemand("2 AB")
-	fmt.Println(demand)
-	ores := strings.Split(demand, ",")
+		r := MakeRecepie(result, recepie)
+		recepies[result] = r
+	}
 
 	count := int64(0)
-	for _, ore := range ores {
-		tokens := strings.Split(ore, " ")
-		if len(tokens) != 3 {
-			continue
-		}
-		a, _ := strconv.Atoi(tokens[0])
-		b, _ := strconv.Atoi(tokens[1])
-		count += (int64(a) * int64(b))
+	fuelCount := 0
+	for consumed := int64(0); consumed <= 1000000000000; consumed += count {
+		count = 0
+		_, oreCount := GetDemand2(MakeRecepieLine("1 FUEL"), 0)
+		//fmt.Println(demand)
+
+		// ores := strings.Split(demand, ",")
+		// for _, ore := range ores {
+		// 	tokens := strings.Split(ore, " ")
+		// 	// if len(tokens) != 3 {
+		// 	// 	continue
+		// 	// }
+		// 	a, _ := strconv.Atoi(tokens[0])
+		// 	//b, _ := strconv.Atoi(tokens[1])
+		// 	count += int64(a)
+		// }
+		fuelCount++
+		consumed = oreCount
 	}
-	fmt.Println("Ore demand", count)
+	//	fmt.Println("Ore demand", count)
+	fmt.Println(fuelCount)
 }
 
-func GetDemand(result string) string {
+func GetDemand2(result RecepieLine, oreDemand int64) ([]RecepieLine, int64) {
 	amount, recepie := GetRecepie(result)
-	demands := strings.Split(recepie, ",")
-	ret := ""
-	for _, demand := range demands {
-		demand = strings.TrimSpace(demand)
-		if strings.Contains(demand, "ORE") {
-			ret += strconv.Itoa(amount) + " " + demand + ","
-		} else {
-			ret += GetDemand(demand)
+
+	ret := []RecepieLine{}
+	for i := int64(0); i < amount; i++ {
+		for _, demand := range recepie.Lines {
+
+			if demand.IsOre {
+				oreDemand += demand.Amount
+				ret = append(ret, demand)
+			} else {
+				ret, oreDemand = GetDemand2(demand, oreDemand)
+			}
 		}
 	}
 
-	return ret
+	return ret, oreDemand
 }
-func GetRecepie(result string) (int, string) {
-	recepie := recepies[result]
-	if recepie != "" {
+
+// func GetDemand(result string) string {
+// 	amount, recepie := GetRecepie(result)
+
+// 	ret := ""
+// 	for _, demand := range recepie.Lines {
+// 		if demand.IsOre {
+// 			ret += strconv.Itoa(amount) + " " + demand + ","
+// 		} else {
+// 			ret += GetDemand(demand)
+// 		}
+// 	}
+
+// 	return ret
+// }
+func GetRecepie(result RecepieLine) (int64, Recepie) {
+	recepie := recepies[result.Original]
+	if recepie.Result != "" {
 		return 1, recepie
 	}
 
-	resultTokens := strings.Split(result, " ")
-	chemical := resultTokens[1]
-	amount, _ := strconv.Atoi(resultTokens[0])
-	for k, v := range recepies {
-		resultTokens = strings.Split(k, " ")
-		if resultTokens[1] == chemical {
-			recepieAmount, _ := strconv.Atoi(resultTokens[0])
+	chemical := result.Chemical
+	amount := result.Amount
+	for _, v := range recepies {
+
+		if v.ResultChemical == chemical {
+
 			//If there are enough chems left from an old run, return from them
 			if amount <= restChems[chemical] {
 				restChems[chemical] = restChems[chemical] - amount
@@ -76,19 +118,19 @@ func GetRecepie(result string) (int, string) {
 
 			//If there are some chems left from an old run, use them
 			amount = amount - restChems[chemical]
-			foo := (amount / recepieAmount)
-			if amount%recepieAmount != 0 {
+			foo := (amount / v.ResultAmount)
+			if amount%v.ResultAmount != 0 {
 				foo++
 			}
-			totMade := foo * recepieAmount
+			totMade := foo * v.ResultAmount
 			restChems[chemical] = totMade - amount
-			consumed := CalcConsumption(amount, v)
-			return foo, consumed
+
+			return foo, v
 
 		}
 	}
 	log.Fatal("Found no recepie")
-	return 0, ""
+	return 0, Recepie{}
 }
 func CalcConsumption(amount int, recepie string) string {
 	chemicals := strings.Split(recepie, ",")
@@ -102,4 +144,34 @@ func CalcConsumption(amount int, recepie string) string {
 		ret += strconv.Itoa(a) + " " + c + ","
 	}
 	return strings.TrimSuffix(ret, ",")
+}
+
+func MakeRecepie(result, recepie string) Recepie {
+	ret := Recepie{
+		Result: result,
+		Lines:  []RecepieLine{},
+	}
+	resultTokens := strings.Split(result, " ")
+	ret.ResultAmount, _ = strconv.ParseInt(resultTokens[0], 10, 64)
+	ret.ResultChemical = resultTokens[1]
+
+	recepieLines := strings.Split(recepie, ",")
+	for _, rl := range recepieLines {
+		l := MakeRecepieLine(rl)
+		ret.Lines = append(ret.Lines, l)
+
+	}
+	return ret
+}
+
+func MakeRecepieLine(lineData string) RecepieLine {
+	lineTokens := strings.Split(lineData, " ")
+	l := RecepieLine{
+		Chemical: lineTokens[1],
+		Original: lineData,
+	}
+	l.Amount, _ = strconv.ParseInt(lineTokens[0], 10, 64)
+	l.IsOre = (l.Chemical == "ORE")
+
+	return l
 }
