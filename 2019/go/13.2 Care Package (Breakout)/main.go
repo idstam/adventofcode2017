@@ -20,13 +20,13 @@ func main() {
 		InputMode:  "Function",
 		OutputMode: "Channel",
 		mem:        StringArrayToInt64Map(numbers),
-		LogLevel:   2,
+		LogLevel:   99,
 	}
 
 	vm.Input = make(chan int64)
 	vm.Output = make(chan int64)
 	vm.InputFunction = NextValue
-	go vm.Run()
+
 	//vm.Input <- 0
 	world := map[string]Int64Point{}
 
@@ -41,6 +41,7 @@ func main() {
 
 	vm.mem[0] = 2
 	count := 0
+	go vm.Run()
 	for vm.State != "Done" {
 		t := Int64Point{}
 		select {
@@ -103,7 +104,6 @@ func NextValue(vm *VM1202) int64 {
 		}
 	}
 	vm.Log(2, "NextValue", ret)
-	fmt.Println("-------------NextValue", ret)
 	return ret
 }
 func DrawText(x, y int, text string, style tcell.Style, s tcell.Screen) {
