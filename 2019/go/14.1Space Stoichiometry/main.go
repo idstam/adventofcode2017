@@ -38,14 +38,32 @@ func main() {
 		recepie := strings.TrimSpace(recepieTokens[0])
 
 		r := MakeRecepie(result, recepie)
-		recepies[result] = r
+		recepies[r.ResultChemical] = r
 	}
 
-	count := int64(0)
-	fuelCount := 0
-	for consumed := int64(0); consumed <= 1000000000000; consumed += count {
-		count = 0
+	totOreCount := int64(0)
+	fuelCount := int64(0)
+	repeat := map[string]int64{}
+	consumed := int64(0)
+	for true {
+
+		r := fmt.Sprintf("%v \n", restChems)
+		fc, exists := repeat[r]
+		if exists {
+
+			length := fuelCount
+			maxFullRuns := 1000000000000 / consumed
+			fuelCount = length * maxFullRuns
+			consumed = maxFullRuns * consumed
+			fmt.Println("Repeating", fc, consumed, totOreCount, maxFullRuns, 1000000000000-consumed)
+		}
+		repeat[r] = fuelCount
+		preConsumed := consumed
 		_, oreCount := GetDemand2(MakeRecepieLine("1 FUEL"), 0)
+		consumed += oreCount
+		if consumed >= 1000000000000 {
+			fmt.Println("Done", fc, consumed, preConsumed, 1000000000000-preConsumed)
+		}
 		//fmt.Println(demand)
 
 		// ores := strings.Split(demand, ",")
@@ -59,7 +77,16 @@ func main() {
 		// 	count += int64(a)
 		// }
 		fuelCount++
-		consumed = oreCount
+		totOreCount = oreCount
+		if fuelCount%10000 == 0 {
+			fmt.Print(".")
+		}
+		if fuelCount%100000 == 0 {
+			fmt.Print("*")
+		}
+		if fuelCount%1000000 == 0 {
+			fmt.Println("+")
+		}
 	}
 	//	fmt.Println("Ore demand", count)
 	fmt.Println(fuelCount)
@@ -99,36 +126,31 @@ func GetDemand2(result RecepieLine, oreDemand int64) ([]RecepieLine, int64) {
 // 	return ret
 // }
 func GetRecepie(result RecepieLine) (int64, Recepie) {
-	recepie := recepies[result.Original]
-	if recepie.Result != "" {
+	recepie := recepies[result.Chemical]
+	if recepie.Result == result.Original {
 		return 1, recepie
 	}
 
 	chemical := result.Chemical
 	amount := result.Amount
-	for _, v := range recepies {
 
-		if v.ResultChemical == chemical {
-
-			//If there are enough chems left from an old run, return from them
-			if amount <= restChems[chemical] {
-				restChems[chemical] = restChems[chemical] - amount
-				return 0, v // Zero since we didn't need to create any new chems
-			}
-
-			//If there are some chems left from an old run, use them
-			amount = amount - restChems[chemical]
-			foo := (amount / v.ResultAmount)
-			if amount%v.ResultAmount != 0 {
-				foo++
-			}
-			totMade := foo * v.ResultAmount
-			restChems[chemical] = totMade - amount
-
-			return foo, v
-
-		}
+	//If there are enough chems left from an old run, return from them
+	if amount <= restChems[chemical] {
+		restChems[chemical] = restChems[chemical] - amount
+		return 0, recepie // Zero since we didn't need to create any new chems
 	}
+
+	//If there are some chems left from an old run, use them
+	amount = amount - restChems[chemical]
+	foo := (amount / recepie.ResultAmount)
+	if amount%recepie.ResultAmount != 0 {
+		foo++
+	}
+	totMade := foo * recepie.ResultAmount
+	restChems[chemical] = totMade - amount
+
+	return foo, recepie
+
 	log.Fatal("Found no recepie")
 	return 0, Recepie{}
 }
@@ -157,7 +179,7 @@ func MakeRecepie(result, recepie string) Recepie {
 
 	recepieLines := strings.Split(recepie, ",")
 	for _, rl := range recepieLines {
-		l := MakeRecepieLine(rl)
+		l := MakeRecepieLine(strings.TrimSpace(rl))
 		ret.Lines = append(ret.Lines, l)
 
 	}
