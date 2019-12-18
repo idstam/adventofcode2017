@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -26,7 +27,7 @@ type Recepie struct {
 
 func main() {
 
-	lines := FileToLines("example.txt")
+	lines := FileToLines("input.txt")
 
 	recepies = map[string]Recepie{}
 	restChems = map[string]int64{}
@@ -44,49 +45,50 @@ func main() {
 	totOreCount := int64(0)
 	fuelCount := int64(0)
 	repeat := map[string]int64{}
-	consumed := int64(0)
+	oreDiff := int64(0)
+	fuelDiff := int64(0)
+	//repeatFound := false
 	for true {
 
 		r := fmt.Sprintf("%v \n", restChems)
 		fc, exists := repeat[r]
+
 		if exists {
+			fmt.Println("Repeating A ", fc, fuelCount, totOreCount)
 
-			length := fuelCount
-			maxFullRuns := 1000000000000 / consumed
-			fuelCount = length * maxFullRuns
-			consumed = maxFullRuns * consumed
-			fmt.Println("Repeating", fc, consumed, totOreCount, maxFullRuns, 1000000000000-consumed)
+			if oreDiff == 0 {
+				oreDiff = totOreCount
+				fuelDiff = fuelCount - fc
+			} else {
+				oreDiff = totOreCount - oreDiff
+
+				for totOreCount+oreDiff < 1000000000000 {
+					totOreCount += oreDiff
+					fuelCount += fuelDiff
+				}
+
+				fmt.Println("Repeating B ", fc, fuelCount, totOreCount)
+			}
+
+			// length := fuelCount - fc
+			// maxIterations := 1000000000000 / totOreCount
+			// fuelCount = length * maxIterations
+			// totOreCount = maxIterations * totOreCount
+			// fmt.Println("Repeating", fc, totOreCount)
+			//repeatFound = true
+		} else {
+			repeat[r] = fuelCount
 		}
-		repeat[r] = fuelCount
-		preConsumed := consumed
+
+		preConsumed := totOreCount
 		_, oreCount := GetDemand2(MakeRecepieLine("1 FUEL"), 0)
-		consumed += oreCount
-		if consumed >= 1000000000000 {
-			fmt.Println("Done", fc, consumed, preConsumed, 1000000000000-preConsumed)
+		totOreCount += oreCount
+		if totOreCount >= 1000000000000 {
+			//82892753
+			fmt.Println("Done", fc, fuelCount, totOreCount, preConsumed, 1000000000000-preConsumed)
+			os.Exit(0)
 		}
-		//fmt.Println(demand)
-
-		// ores := strings.Split(demand, ",")
-		// for _, ore := range ores {
-		// 	tokens := strings.Split(ore, " ")
-		// 	// if len(tokens) != 3 {
-		// 	// 	continue
-		// 	// }
-		// 	a, _ := strconv.Atoi(tokens[0])
-		// 	//b, _ := strconv.Atoi(tokens[1])
-		// 	count += int64(a)
-		// }
 		fuelCount++
-		totOreCount = oreCount
-		if fuelCount%10000 == 0 {
-			fmt.Print(".")
-		}
-		if fuelCount%100000 == 0 {
-			fmt.Print("*")
-		}
-		if fuelCount%1000000 == 0 {
-			fmt.Println("+")
-		}
 	}
 	//	fmt.Println("Ore demand", count)
 	fmt.Println(fuelCount)
