@@ -1,11 +1,10 @@
 package main
 
 import (
+	"github.com/gdamore/tcell"
 	"log"
 	"strconv"
 	"strings"
-
-	"github.com/gdamore/tcell"
 )
 
 var world [][]string
@@ -63,28 +62,23 @@ func VmOutput(vm *VM1202, val int64) {
 func ChangeDirection() {
 
 	for i := 0; i < 4; i++ {
-		direction++
-		if direction == 5 {
-			direction = 1
-		}
+		direction = RotateClockwise(direction)
 		SetDeltaDirections()
 		if world[y+dy][x+dx] == " " {
 			backtracking = false
 			return
 		}
 	}
-	if !backtracking {
-		world[y][x] = "D"
-		world[50][50] = "S"
-		dumpStringMatrix(world, "Starting backtrack")
-		world[y][x] = "."
-		world[50][50] = "."
-	}
+	//if !backtracking {
+	world[y][x] = "D"
+	world[50][50] = "S"
+	//dumpStringMatrix(world, "Starting backtrack")
+	ImageStringMatrix(world, matrixStringToColor)
+	world[y][x] = "."
+	world[50][50] = "."
+	//}
 	for i := 0; i < 4; i++ {
-		direction++
-		if direction == 5 {
-			direction = 1
-		}
+		direction = RotateClockwise(direction)
 		SetDeltaDirections()
 		if world[y+dy][x+dx] == "." {
 			backtracking = true
@@ -98,6 +92,20 @@ func ChangeDirection() {
 	world[y][x] = "."
 	world[50][50] = "."
 
+}
+func RotateClockwise(direction int) int {
+	switch direction {
+	case 1:
+		return 4
+	case 2:
+		return 3
+	case 3:
+		return 1
+	case 4:
+		return 2
+	}
+	log.Fatal("Unknown direction")
+	return 0
 }
 func SetDeltaDirections() {
 	switch direction {
@@ -140,4 +148,24 @@ func DrawPoint(p Int64Point, sc tcell.Screen) {
 	r := []rune(strconv.FormatInt(p.Z, 10))
 	sc.SetContent(int(p.X), int(p.Y), r[0], []rune(""), s)
 
+}
+
+func matrixStringToColor(tile string) (float64, float64, float64) {
+	switch tile {
+	case " ":
+		return 0.5, 0.5, 0.5
+	case ".":
+		return 255, 255, 255
+	case "#":
+		return 0, 0, 0
+	case "O":
+		return 0, 0.3, 1
+	case "D":
+		return 1, 0, 0
+	case "S":
+		return 0, 1, 0
+	}
+
+	log.Fatal("Unknown tile type")
+	return 0.5, 0.5, 0.5
 }

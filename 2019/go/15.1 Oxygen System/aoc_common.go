@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"github.com/fogleman/gg"
 	"log"
 	"math"
 	"os"
@@ -168,6 +169,19 @@ func dumpStringMatrix(matrix [][]string, caption string) {
 	fmt.Println("")
 }
 
+type StringToColor func(string) (float64, float64, float64)
+
+func ImageStringMatrix(matrix [][]string, stringToColor StringToColor) {
+	dc := gg.NewContext(len(matrix), len(matrix))
+	for y, line := range matrix {
+		for x, tile := range line {
+			r, g, b := stringToColor(tile)
+			dc.SetRGB(r, g, b)
+			dc.SetPixel(x, y)
+		}
+	}
+	dc.SavePNG("out.png")
+}
 func StringArrayToInt64Map(in []string) map[int64]int64 {
 	ret := map[int64]int64{}
 	for i, s := range in {
