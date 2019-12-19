@@ -1,15 +1,19 @@
 package main
 
 import (
-	"github.com/gdamore/tcell"
 	"log"
+	"os"
+	"os/exec"
 	"strconv"
 	"strings"
+
+	"github.com/gdamore/tcell"
 )
 
 var world [][]string
 var x, y, dx, dy, direction int
-var backtracking bool
+var probing bool
+var steps int
 
 func main() {
 	lines := FileToLines("input.txt")
@@ -41,14 +45,25 @@ func VmInput(vm *VM1202) int64 {
 	return int64(direction)
 }
 func VmOutput(vm *VM1202, val int64) {
+	steps++
+
+	if steps%10 == 0 {
+		DrawWorld()
+		c := exec.Command("clear")
+		c.Stdout = os.Stdout
+		c.Run()
+	}
 	switch val {
 	case 0:
 		world[y+dy][x+dx] = "#"
+		probing = false
 		ChangeDirection()
 	case 1:
 		world[y+dy][x+dx] = "."
 		y += dy
 		x += dx
+		probing = true
+		ChangeDirection()
 	case 2:
 		world[y+dy][x+dx] = "O"
 		y += dy
@@ -61,39 +76,28 @@ func VmOutput(vm *VM1202, val int64) {
 
 func ChangeDirection() {
 
-	for i := 0; i < 4; i++ {
-		direction = RotateClockwise(direction)
-		SetDeltaDirections()
-		if world[y+dy][x+dx] == " " {
-			backtracking = false
-			return
-		}
-	}
-	//if !backtracking {
-	world[y][x] = "D"
-	world[50][50] = "S"
-	//dumpStringMatrix(world, "Starting backtrack")
-	ImageStringMatrix(world, matrixStringToColor)
-	world[y][x] = "."
-	world[50][50] = "."
-	//}
-	for i := 0; i < 4; i++ {
-		direction = RotateClockwise(direction)
-		SetDeltaDirections()
-		if world[y+dy][x+dx] == "." {
-			backtracking = true
-			return
-		}
-	}
+	if probing {
+		direction = TurnLeft(direction)
+	} else {
+		direction = TurnRight(direction)
 
-	world[y][x] = "D"
-	world[50][50] = "S"
-	dumpStringMatrix(world, "Should not happen")
-	world[y][x] = "."
-	world[50][50] = "."
+	}
+	SetDeltaDirections()
+	//if !backtracking {
+
+	//}
+	return
 
 }
-func RotateClockwise(direction int) int {
+func DrawWorld() {
+	world[y][x] = "D"
+	world[50][50] = "S"
+	dumpStringMatrix(world, "Starting backtrack")
+	//ImageStringMatrix(world, matrixStringToColor)
+	world[y][x] = "."
+	world[50][50] = "."
+}
+func TurnRight(direction int) int {
 	switch direction {
 	case 1:
 		return 4
@@ -103,6 +107,20 @@ func RotateClockwise(direction int) int {
 		return 1
 	case 4:
 		return 2
+	}
+	log.Fatal("Unknown direction")
+	return 0
+}
+func TurnLeft(direction int) int {
+	switch direction {
+	case 1:
+		return 3
+	case 2:
+		return 4
+	case 3:
+		return 2
+	case 4:
+		return 1
 	}
 	log.Fatal("Unknown direction")
 	return 0

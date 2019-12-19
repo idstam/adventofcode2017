@@ -180,7 +180,8 @@ func ImageStringMatrix(matrix [][]string, stringToColor StringToColor) {
 			dc.SetPixel(x, y)
 		}
 	}
-	dc.SavePNG("out.png")
+	dc.SavePNG("out.tmp.png")
+	os.Rename("out.tmp.png", "out.png")
 }
 func StringArrayToInt64Map(in []string) map[int64]int64 {
 	ret := map[int64]int64{}
