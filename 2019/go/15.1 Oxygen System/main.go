@@ -47,7 +47,7 @@ func VmInput(vm *VM1202) int64 {
 func VmOutput(vm *VM1202, val int64) {
 	steps++
 
-	if steps%10 == 0 {
+	if steps%1000 == 0 {
 		DrawWorld()
 		c := exec.Command("clear")
 		c.Stdout = os.Stdout
@@ -68,7 +68,7 @@ func VmOutput(vm *VM1202, val int64) {
 		world[y+dy][x+dx] = "O"
 		y += dy
 		x += dx
-		world[y][x] = "D"
+		//world[y][x] = "D"
 		dumpStringMatrix(world, "Found OXYGEN")
 		world[y][x] = "."
 	}
