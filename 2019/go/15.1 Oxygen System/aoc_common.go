@@ -120,6 +120,7 @@ func makeSquareStringMatrix(size int, def string) [][]string {
 	}
 	return ret
 }
+
 func blitStringMatrix(small, large [][]string, x, y int) [][]string {
 	for dy := 0; dy < len(small[0]); dy++ {
 		for dx := 0; dx < len(small[0]); dx++ {
@@ -316,6 +317,35 @@ func IntPopArray(a []int) (int, []int) {
 	val := a[0]
 	return val, IntRemoveFromSlice(0, a)
 }
+func IntQueueArray(i int, a []int) []int {
+	return append(a, i)
+}
+func IntDeQueueArray(a []int) (int, []int) {
+	return IntPopArray(a)
+}
+
+func IntPointRemoveFromSlice(i int, s []IntPoint) []IntPoint {
+	a := append(s[:i], s[i+1:]...)
+
+	return a
+}
+
+func IntPointPushArray(i IntPoint, a []IntPoint) []IntPoint {
+	return append([]IntPoint{i}, a...)
+}
+func IntPointPopArray(a []IntPoint) (IntPoint, []IntPoint) {
+	if len(a) == 0 {
+		log.Fatal("Trying to POP empty array")
+	}
+	val := a[0]
+	return val, IntPointRemoveFromSlice(0, a)
+}
+func IntPointQueueArray(i IntPoint, a []IntPoint) []IntPoint {
+	return append(a, i)
+}
+func IntPointDeQueueArray(a []IntPoint) (IntPoint, []IntPoint) {
+	return IntPointPopArray(a)
+}
 
 //IntPointBetween Is the point p between a and b
 func IntPointBetween(p, a, b IntPoint) bool {
@@ -382,4 +412,53 @@ func IntDirection(a, b int) int {
 }
 func (p IntPoint) SameAs(p2 IntPoint) bool {
 	return p.X == p2.X && p.Y == p2.Y && p.Z == p2.Z
+}
+
+func BFS(matrix [][]string, start, end IntPoint, badValue string) int {
+	visited := makeSquareStringMatrix(len(matrix), " ")
+	pointQueue := []IntPoint{}
+
+	if matrix[start.Y][start.X] == badValue ||
+		matrix[end.Y][end.X] == badValue {
+		return -1
+	}
+	visited[start.Y][start.X] = "V"
+	pointQueue = IntPointQueueArray(start, pointQueue)
+	steps := 0
+	for len(pointQueue) > 0 {
+		steps++
+		currentPoint := pointQueue[0]
+		//Use current Z on both sides to make use of SameAs
+		if currentPoint.SameAs(IntPoint{end.X, end.Y, currentPoint.Z}) {
+			return currentPoint.Z
+		}
+
+		_, pointQueue = IntPointDeQueueArray(pointQueue)
+		p := IntPoint{X: currentPoint.X, Y: currentPoint.Y + 1, Z: currentPoint.Z + 1}
+		if BFSValidCell(matrix, p, "#") && visited[p.Y][p.X] != "V" {
+			visited[p.Y][p.X] = "V"
+			pointQueue = IntPointQueueArray(p, pointQueue)
+		}
+		p = IntPoint{X: currentPoint.X, Y: currentPoint.Y - 1, Z: currentPoint.Z + 1}
+		if BFSValidCell(matrix, p, "#") && visited[p.Y][p.X] != "V" {
+			visited[p.Y][p.X] = "V"
+			pointQueue = IntPointQueueArray(p, pointQueue)
+		}
+		p = IntPoint{X: currentPoint.X + 1, Y: currentPoint.Y, Z: currentPoint.Z + 1}
+		if BFSValidCell(matrix, p, "#") && visited[p.Y][p.X] != "V" {
+			visited[p.Y][p.X] = "V"
+			pointQueue = IntPointQueueArray(p, pointQueue)
+		}
+		p = IntPoint{X: currentPoint.X - 1, Y: currentPoint.Y, Z: currentPoint.Z + 1}
+		if BFSValidCell(matrix, p, "#") && visited[p.Y][p.X] != "V" {
+			pointQueue = IntPointQueueArray(p, pointQueue)
+		}
+
+	}
+	return -1
+}
+func BFSValidCell(matrix [][]string, p IntPoint, badValue string) bool {
+	//fmt.Println(matrix[p.Y][p.X])
+	ret := p.X >= 0 && p.X < len(matrix) && p.Y >= 0 && p.Y < len(matrix) && matrix[p.Y][p.X] != badValue
+	return ret
 }

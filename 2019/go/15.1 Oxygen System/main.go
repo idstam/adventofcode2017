@@ -1,9 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
-	"os/exec"
 	"strconv"
 	"strings"
 
@@ -14,6 +14,7 @@ var world [][]string
 var x, y, dx, dy, direction int
 var probing bool
 var steps int
+var oxygenPoint IntPoint
 
 func main() {
 	lines := FileToLines("input.txt")
@@ -32,9 +33,9 @@ func main() {
 	vm.OutputFunction = VmOutput
 
 	//vm.Input <- 0
-	world = makeSquareStringMatrix(100, " ")
-	x = 50
-	y = 50
+	world = makeSquareStringMatrix(50, " ")
+	x = 25
+	y = 25
 	dy = -1
 	direction = 1
 	world[y][x] = "."
@@ -45,13 +46,13 @@ func VmInput(vm *VM1202) int64 {
 	return int64(direction)
 }
 func VmOutput(vm *VM1202, val int64) {
-	steps++
 
-	if steps%1000 == 0 {
-		DrawWorld()
-		c := exec.Command("clear")
-		c.Stdout = os.Stdout
-		c.Run()
+	steps++
+	if steps > 1000 && x == 25 && y == 25 {
+		dumpStringMatrix(world, "Mapped")
+		minSteps := BFS(world, IntPoint{X: 25, Y: 25}, oxygenPoint, "#")
+		fmt.Println("Min steps to oxygen", minSteps)
+		os.Exit(0)
 	}
 	switch val {
 	case 0:
@@ -68,10 +69,9 @@ func VmOutput(vm *VM1202, val int64) {
 		world[y+dy][x+dx] = "O"
 		y += dy
 		x += dx
-		//world[y][x] = "D"
-		dumpStringMatrix(world, "Found OXYGEN")
-		world[y][x] = "."
+		oxygenPoint = IntPoint{X: x, Y: y}
 	}
+
 }
 
 func ChangeDirection() {
@@ -91,11 +91,11 @@ func ChangeDirection() {
 }
 func DrawWorld() {
 	world[y][x] = "D"
-	world[50][50] = "S"
+	world[25][25] = "S"
 	dumpStringMatrix(world, "Starting backtrack")
 	//ImageStringMatrix(world, matrixStringToColor)
 	world[y][x] = "."
-	world[50][50] = "."
+	world[25][25] = "S"
 }
 func TurnRight(direction int) int {
 	switch direction {
