@@ -42,6 +42,21 @@ func main() {
 	vm.Run()
 
 }
+
+func MaxStepsToOxygen() int {
+	max := 0
+	for y := 0; y < len(world); y++ {
+		for x := 0; x < len(world); x++ {
+			if world[y][x] == "." {
+				s := BFS(world, IntPoint{X: x, Y: y}, oxygenPoint, "#")
+				if s > max {
+					max = s
+				}
+			}
+		}
+	}
+	return max
+}
 func VmInput(vm *VM1202) int64 {
 	return int64(direction)
 }
@@ -52,6 +67,7 @@ func VmOutput(vm *VM1202, val int64) {
 		dumpStringMatrix(world, "Mapped")
 		minSteps := BFS(world, IntPoint{X: 25, Y: 25}, oxygenPoint, "#")
 		fmt.Println("Min steps to oxygen", minSteps)
+		fmt.Println("Max steps to oxygen", MaxStepsToOxygen())
 		os.Exit(0)
 	}
 	switch val {
