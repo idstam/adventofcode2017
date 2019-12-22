@@ -324,6 +324,13 @@ func IntDeQueueArray(a []int) (int, []int) {
 	return IntPopArray(a)
 }
 
+func IntRingAt(i int, a []int) (v int, p int) {
+	if i < len(a) {
+		return a[i], i
+	}
+	p = i % len(a)
+	return a[p], p
+}
 func IntPointRemoveFromSlice(i int, s []IntPoint) []IntPoint {
 	a := append(s[:i], s[i+1:]...)
 
