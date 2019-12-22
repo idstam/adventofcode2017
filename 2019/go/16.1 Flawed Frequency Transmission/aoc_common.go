@@ -331,6 +331,14 @@ func IntRingAt(i int, a []int) (v int, p int) {
 	p = i % len(a)
 	return a[p], p
 }
+func IntRepeatArray(in []int, times int) []int {
+	ret := []int{}
+	for i := 0; i < times; i++ {
+		ret = append(ret, in...)
+	}
+	return ret
+}
+
 func IntPointRemoveFromSlice(i int, s []IntPoint) []IntPoint {
 	a := append(s[:i], s[i+1:]...)
 
