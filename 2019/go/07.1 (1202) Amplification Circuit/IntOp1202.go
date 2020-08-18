@@ -8,30 +8,26 @@ import (
 type VM1202 struct {
 	Name       string
 	mem        []int
-	output     chan int
-	inputs     chan int
-	inputMode  string
-	outputMode string
-	state      string
-	ptr        int
-	lastOutput int
-	logLevel   int
-}
+	Output     chan int
+	LastOutput int
+	Input      chan int
+	InputMode  string
+	OutputMode string
+	LogLevel   int
 
-func (vm *VM1202) RunAsync() {
-	go func() { vm.Run() }()
+	State string
+	ptr   int
 }
 
 func (vm *VM1202) Run() {
-	if vm.logLevel == 0 {
-		fmt.Println(vm.Name, "RUN")
-	}
+	vm.Log(1, vm.Name, "RUN")
+	vm.State = "Running"
 	ptr := 0
 	vm.state = "Running"
 	for ptr >= 0 {
 		ptr = vm.Exec(ptr)
 	}
-	vm.state = "Done"
+	vm.State = "Done"
 }
 func (vm *VM1202) Exec(ptr int) int {
 	fullOp := vm.mem[ptr]
@@ -100,7 +96,7 @@ func (vm *VM1202) Exec(ptr int) int {
 		vm.ptr += 4
 
 	case 99:
-		fmt.Println("Exit")
+		vm.Log(1, "Exit")
 		return -1
 	default:
 		log.Fatalf("Unknown OP Code %d \n", op)
@@ -163,41 +159,35 @@ func (vm *VM1202) GetValue(adress int) []int {
 
 }
 func (vm *VM1202) GetInput() int {
-	if vm.logLevel == 0 {
-		fmt.Println(vm.Name, "GetInput", "in")
-	}
+	vm.Log(0, vm.Name, "GetInput", "in")
 	ret := 0
 
-	switch vm.inputMode {
+	switch vm.InputMode {
 	case "Console":
 		fmt.Scan(&ret)
 	case "Channel":
-		ret = <-vm.inputs
+		ret = <-vm.Input
 	default:
-		log.Panic("UNKNOWN IO MODE " + vm.inputMode)
+		log.Panic("UNKNOWN INPUT MODE " + vm.InputMode)
 	}
-	if vm.logLevel == 0 {
-		fmt.Println(vm.Name, "GetInput", "out", ret)
-	}
+
+	vm.Log(0, vm.Name, "GetInput", "out", ret)
 	return ret
 }
 func (vm *VM1202) SendOutput(val int) {
-	if vm.logLevel == 0 {
-		fmt.Println(vm.Name, "SendOutput", "in", val)
-	}
-	vm.lastOutput = val
-	switch vm.outputMode {
+	vm.Log(0, vm.Name, "SendOutput", vm.OutputMode, "in", val)
+	vm.LastOutput = val
+	switch vm.OutputMode {
 	case "Console":
 		fmt.Println(vm.Name, "SendOutput", "->", val)
 	case "Channel":
-		vm.output <- val
+		vm.Output <- val
 	case "Silent":
 	default:
-		log.Panic("UNKNOWN IO MODE " + vm.outputMode)
+		log.Panic("UNKNOWN OUTPUT MODE " + vm.OutputMode)
 	}
-	if vm.logLevel == 0 {
-		fmt.Println(vm.Name, "SendOutput", "out")
-	}
+	vm.Log(0, vm.Name, "SendOutput", vm.OutputMode, "out")
+
 }
 func (vm *VM1202) ParseOpCode(in int) (int, int, int, int) {
 	op := in % 100
@@ -208,4 +198,9 @@ func (vm *VM1202) ParseOpCode(in int) (int, int, int, int) {
 	in -= b * 1000
 	a := (in % 100000) / 10000
 	return a, b, c, op
+}
+func (vm *VM1202) Log(level int, message ...interface{}) {
+	if level >= vm.LogLevel {
+		fmt.Println(message)
+	}
 }
