@@ -28,30 +28,34 @@ func main() {
 			}
 			vm.inputs = make(chan int, 100)
 			vm.output = make(chan int)
-			vm.outputMode = "Console"
+			vm.outputMode = "Silent"
 			vm.inputMode = "Channel"
-			vm.logLevel = 99
+			vm.logLevel = 0
 			//vm.inputs <- phase
 
 			vms = append(vms, vm)
 		}
+
+		vms[4].output <-
 		for vms[4].state != "Done" {
 			vms[0].inputs <- phases[0]
-			vms[0].inputs <- vms[4].lastOutput
+			vms[1].inputs <- phases[1]
+			vms[2].inputs <- phases[2]
+			vms[3].inputs <- phases[3]
+			vms[4].inputs <- phases[4]
 
+			foo := <-vms[4].output
+			vms[0].inputs <- foo
 			vms[0].Run()
 
-			vms[1].inputs <- phases[1]
+			
 			vms[1].inputs <- vms[0].lastOutput
 			vms[1].Run()
 
-			vms[2].inputs <- phases[2]
 			vms[2].inputs <- vms[1].lastOutput
 			vms[2].Run()
-			vms[3].inputs <- phases[3]
 			vms[3].inputs <- vms[2].lastOutput
 			vms[3].Run()
-			vms[4].inputs <- phases[4]
 			vms[4].inputs <- vms[3].lastOutput
 			vms[4].Run()
 		}
@@ -84,4 +88,5 @@ func main() {
 		}
 	}
 
+	fmt.Println(maxThrust)
 }

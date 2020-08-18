@@ -6,26 +6,40 @@ import (
 )
 
 type VM1202 struct {
-	Name   string
-	mem    []int
-	output chan int
-	inputs chan int
-	ioMode string
-	ptr    int
+	Name       string
+	mem        []int
+	output     chan int
+	inputs     chan int
+	inputMode  string
+	outputMode string
+	state      string
+	ptr        int
+	lastOutput int
+	logLevel   int
+}
+
+func (vm *VM1202) RunAsync() {
+	go func() { vm.Run() }()
 }
 
 func (vm *VM1202) Run() {
-	fmt.Println(vm.Name, "RUN")
+	if vm.logLevel == 0 {
+		fmt.Println(vm.Name, "RUN")
+	}
 	ptr := 0
+	vm.state = "Running"
 	for ptr >= 0 {
 		ptr = vm.Exec(ptr)
 	}
+	vm.state = "Done"
 }
 func (vm *VM1202) Exec(ptr int) int {
 	fullOp := vm.mem[ptr]
 	_, mb, mc, op := vm.ParseOpCode(fullOp)
 	if op == 99 {
-		//fmt.Println("Exit")
+		if vm.logLevel == 0 {
+			fmt.Println(vm.Name, "Exit")
+		}
 		return -1
 	}
 	v1, v2, v3 := vm.GetValues(ptr)
@@ -149,33 +163,41 @@ func (vm *VM1202) GetValue(adress int) []int {
 
 }
 func (vm *VM1202) GetInput() int {
-	fmt.Println(vm.Name, "GetInput", "in")
+	if vm.logLevel == 0 {
+		fmt.Println(vm.Name, "GetInput", "in")
+	}
 	ret := 0
 
-	switch vm.ioMode {
+	switch vm.inputMode {
 	case "Console":
-		fmt.Scanf("%d", &ret)
+		fmt.Scan(&ret)
 	case "Channel":
 		ret = <-vm.inputs
 	default:
-		log.Panic("UNKNOWN IO MODE " + vm.ioMode)
+		log.Panic("UNKNOWN IO MODE " + vm.inputMode)
 	}
-
-	fmt.Println(vm.Name, "GetInput", "out", ret)
+	if vm.logLevel == 0 {
+		fmt.Println(vm.Name, "GetInput", "out", ret)
+	}
 	return ret
 }
 func (vm *VM1202) SendOutput(val int) {
-	fmt.Println(vm.Name, "SendOutput", "in", val)
-	switch vm.ioMode {
+	if vm.logLevel == 0 {
+		fmt.Println(vm.Name, "SendOutput", "in", val)
+	}
+	vm.lastOutput = val
+	switch vm.outputMode {
 	case "Console":
 		fmt.Println(vm.Name, "SendOutput", "->", val)
 	case "Channel":
 		vm.output <- val
+	case "Silent":
 	default:
-		log.Panic("UNKNOWN IO MODE " + vm.ioMode)
+		log.Panic("UNKNOWN IO MODE " + vm.outputMode)
 	}
-	fmt.Println(vm.Name, "SendOutput", "out")
-
+	if vm.logLevel == 0 {
+		fmt.Println(vm.Name, "SendOutput", "out")
+	}
 }
 func (vm *VM1202) ParseOpCode(in int) (int, int, int, int) {
 	op := in % 100
