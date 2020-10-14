@@ -1,5 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Xml.Linq;
 
 namespace _18_Many_Worlds_Interpretation
 {
@@ -12,28 +16,45 @@ namespace _18_Many_Worlds_Interpretation
             var maze = new Maze();
             maze.Init(lines);
 
-            foreach(var i in maze.Items)
+
+            //maze.DumpPoints(3);
+
+            List<MazeItem> keys;
+            int totalSteps = 0;
+
+            do
             {
-                if(i.Name == "@")
+                var current = maze.FindAll(i => i == "@").First();
+                maze.Distance(current);
+
+                maze.DumpPoints(3);
+
+                keys = maze.FindAll(i => Char.IsLower(i[0])).Where(k => k.Steps > 0).ToList();
+                
+                if (keys.Any())
                 {
-                    i.ItemType = "entrance";
-                }else if(i.Name == i.Name.ToLowerInvariant())
-                {
-                    i.ItemType = "key";
+                    var key = keys[0];
+                    var doors = maze.FindAll(i =>Char.IsUpper(i[0]) && i == key.Name.ToUpperInvariant());
+                    if (doors.Any())
+                    {
+                        maze.SetMapItem(doors[0].X, doors[0].Y, ".");
+                    }
+                    else
+                    {
+                        Console.Write("No doors left");
+                        break;
+                    }
+                    
+
+                    totalSteps += key.Steps;
+                    maze.SetMapItem(current.X, current.Y, ".");
+                    maze.SetMapItem(key.X, key.Y, "@");
+
                 }
-                else if (i.Name == i.Name.ToUpperInvariant())
-                {
-                    i.ItemType = "door";
-                }
-            }
+            } while (keys.Any());
 
-            maze.DumpPoints(3);
-
-            var entrance = maze.Items.Find(i => i.Name == "@");
-            var a = maze.Items.Find(i => i.Name == "a");
-
-            var steps = maze.Walk(entrance, a);
-
+            Console.WriteLine("totalSteps");
+            Console.WriteLine(totalSteps);
 
         }
 

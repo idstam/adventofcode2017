@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.VisualBasic.CompilerServices;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -13,23 +14,22 @@ namespace _18_Many_Worlds_Interpretation
 
         public string Wall;
         public string Room;
-        public List<MazeItem> Items;
+        
         
         public void Init(string[] lines)
         {
             Wall = "#";
             Room = ".";
-            Items = new List<MazeItem>();
 
             _pointMap = new int[lines[0].Length, lines.Length];
             _map = new string[lines[0].Length, lines.Length];
             _maxX = lines[0].Length - 1;
             _maxY = lines.Length - 1;
 
-            InitMapsAndItems(lines);
+            InitMaps(lines);
         }
 
-        private void InitMapsAndItems(string[] lines)
+        private void InitMaps(string[] lines)
         {
             for (int x = 0; x < lines[0].Length; x++)
             {
@@ -38,23 +38,12 @@ namespace _18_Many_Worlds_Interpretation
                     _pointMap[x, y] = -1;
                     var line = lines[y];
                     var itemName = line[x].ToString();
-
                     _map[x, y] = itemName;
-
-                    if (itemName != Wall && itemName != Room)
-                    {
-                        var i = new MazeItem
-                        {
-                            X = x,
-                            Y = y,
-                            Name = itemName
-                        };
-                        Items.Add(i);
-                    }
 
                 }
             }
         }
+
         private void InitPointMap()
         {
             for (int x = 0; x <= _maxX; x++)
@@ -66,13 +55,6 @@ namespace _18_Many_Worlds_Interpretation
             }
         }
 
-        public int Distance(MazeItem origin, MazeItem dest)
-        {
-            
-            return Distance(origin.X, origin.Y, dest.X, dest.Y);
-            
-
-        }
         
         public List<MazeItem> Walk(MazeItem origin, MazeItem dest)
         {
@@ -129,6 +111,16 @@ namespace _18_Many_Worlds_Interpretation
             return null;
         }
 
+        public void Distance(MazeItem origin)
+        {
+            Distance(origin.X, origin.Y, origin.X, origin.Y);
+        }
+
+        public int Distance(MazeItem origin, MazeItem dest)
+        {
+            return Distance(origin.X, origin.Y, dest.X, dest.Y);
+        }
+
         public int Distance(int x1, int y1, int x2, int y2)
         {
             InitPointMap();
@@ -137,15 +129,47 @@ namespace _18_Many_Worlds_Interpretation
 
         }
 
+        public void SetMapItem(int x, int y, string name)
+        {
+            _map[x, y] = name;
+        }
+        public List<MazeItem> FindAll(Func<string, bool> condition)
+        {
+            var ret = new List<MazeItem>();
+
+            for (int x = 0; x <= _maxX; x++)
+            {
+                for (int y = 0; y <= _maxY; y++)
+                {
+                    if(condition(_map[x, y]))
+                    {
+                        ret.Add(new MazeItem() {Name= _map[x, y], X=x, Y= y, Steps = _pointMap[x, y] });
+                    }
+                }
+            }
+
+            return ret;
+
+        }
         private void setDistance(int x, int y, int step)
         {
             _pointMap[x, y] = step;
-            if (y > 0 && _map[x, y - 1] != Wall && _pointMap[x, y - 1] == -1) setDistance(x, y - 1, step + 1);
-            if (y < _maxY  && _map[x, y + 1] != Wall && _pointMap[x, y + 1] == -1) setDistance(x, y + 1, step + 1);
-            if (x > 0 && _map[x-1, y] != Wall && _pointMap[x - 1, y] == -1) setDistance(x-1, y, step + 1);
-            if (x < _maxX  && _map[x+1, y] != Wall && _pointMap[x + 1, y] == -1) setDistance(x+1, y, step + 1);
+            
+            if (y > 0 && !IsBlocked(x, y - 1) && _pointMap[x, y - 1] == -1) setDistance(x, y - 1, step + 1);
+            if (y < _maxY  && !IsBlocked(x, y + 1) && _pointMap[x, y + 1] == -1) setDistance(x, y + 1, step + 1);
+            if (x > 0 && !IsBlocked(x -1, y) && _pointMap[x - 1, y] == -1) setDistance(x-1, y, step + 1);
+            if (x < _maxX  && !IsBlocked(x +1, y)&& _pointMap[x + 1, y] == -1) setDistance(x+1, y, step + 1);
 
         }
+        public bool IsDoor(int x, int y)
+        {
+            return Char.IsUpper(_map[x, y][0]);
+        }
+        public bool IsBlocked(int x, int y)
+        {
+            return IsDoor(x, y) || _map[x, y] == Wall;
+        }
+
         public void DumpPoints(int pad)
         {
             for (int y = 0; y <= _maxY; y++)
@@ -168,5 +192,6 @@ namespace _18_Many_Worlds_Interpretation
         public int Y;
         public string ItemType;
         public string Name;
+        public  int Steps;
     }
 }
