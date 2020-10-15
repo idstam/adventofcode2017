@@ -15,10 +15,6 @@ namespace _18_Many_Worlds_Interpretation
             var lines = File.ReadAllLines("data.txt");
             var maze = new Maze();
             maze.Init(lines);
-
-
-            //maze.DumpPoints(3);
-
             List<MazeItem> keys;
             int totalSteps = 0;
 
@@ -27,26 +23,35 @@ namespace _18_Many_Worlds_Interpretation
                 var current = maze.FindAll(i => i == "@").First();
                 maze.Distance(current);
 
-                maze.DumpPoints(3);
+                // maze.DumpPoints(3);
+                // maze.DumpMap(3);
 
                 keys = maze.FindAll(i => Char.IsLower(i[0])).Where(k => k.Steps > 0).ToList();
                 
                 if (keys.Any())
                 {
                     var key = keys[0];
-                    var doors = maze.FindAll(i =>Char.IsUpper(i[0]) && i == key.Name.ToUpperInvariant());
+                    totalSteps += key.Steps;
+                    Console.WriteLine("Key: " + key.Name);
+
+                    var doors = maze.FindAll(i =>Char.IsUpper(i[0]));
                     if (doors.Any())
                     {
-                        maze.SetMapItem(doors[0].X, doors[0].Y, ".");
+                        var door = doors.Where(d => d.Name.ToLowerInvariant() == key.Name).FirstOrDefault();
+                        if(door != null){
+                            maze.SetMapItem(door.X, door.Y, ".");
+                        }
+                        
                     }
                     else
                     {
+                        maze.DumpMap(1);
                         Console.Write("No doors left");
                         break;
                     }
                     
 
-                    totalSteps += key.Steps;
+                    
                     maze.SetMapItem(current.X, current.Y, ".");
                     maze.SetMapItem(key.X, key.Y, "@");
 

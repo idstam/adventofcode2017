@@ -12,30 +12,40 @@ namespace _18_Many_Worlds_Interpretation
         private int _maxX;
         private int _maxY;
 
-        public string Wall;
-        public string Room;
-        
-        
+        public string Wall = "#";
+        public string Room = ".";
+
+        public Maze(){
+        }        
+        public Maze(string[,] map)
+        {
+            _maxX = map.GetLength(0) -1;
+            _maxY = map.GetLength(1) -1;
+            _pointMap = new int[map.GetLength(0), map.GetLength(1)];
+            _map = map;
+            InitPointMap();
+        }
         public void Init(string[] lines)
         {
-            Wall = "#";
-            Room = ".";
 
             _pointMap = new int[lines[0].Length, lines.Length];
             _map = new string[lines[0].Length, lines.Length];
             _maxX = lines[0].Length - 1;
             _maxY = lines.Length - 1;
 
-            InitMaps(lines);
+            InitMap(lines);
+            InitPointMap();
         }
 
-        private void InitMaps(string[] lines)
+        public Maze Clone(){
+            return new Maze((string[,])_map.Clone());            
+        }
+        private void InitMap(string[] lines)
         {
             for (int x = 0; x < lines[0].Length; x++)
             {
                 for (int y = 0; y < lines.Length; y++)
                 {
-                    _pointMap[x, y] = -1;
                     var line = lines[y];
                     var itemName = line[x].ToString();
                     _map[x, y] = itemName;
@@ -170,6 +180,19 @@ namespace _18_Many_Worlds_Interpretation
             return IsDoor(x, y) || _map[x, y] == Wall;
         }
 
+        public void DumpMap(int pad)
+        {
+            for (int y = 0; y <= _maxY; y++)
+            {
+                for (int x = 0; x <= _maxX; x++)
+                {
+                    
+                    Console.Write(_map[x, y].ToString().PadLeft(pad));
+                }
+                Console.WriteLine();
+            }
+
+        }
         public void DumpPoints(int pad)
         {
             for (int y = 0; y <= _maxY; y++)
