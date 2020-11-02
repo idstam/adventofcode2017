@@ -216,5 +216,9 @@ namespace _18_Many_Worlds_Interpretation
         public string ItemType;
         public string Name;
         public  int Steps;
+
+        public MazeItem Clone(){
+            return new MazeItem(){X=X, Y=Y, ItemType=ItemType, Name=Name, Steps=Steps};
+        }
     }
 }
