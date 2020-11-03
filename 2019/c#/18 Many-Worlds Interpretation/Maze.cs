@@ -163,7 +163,10 @@ namespace _18_Many_Worlds_Interpretation
         }
         private void setDistance(int x, int y, int step)
         {
-            _pointMap[x, y] = step;
+            if (_pointMap[x, y] == -1 || _pointMap[x, y] > step)
+            {
+                _pointMap[x, y] = step;
+            }
             
             if (y > 0 && !IsBlocked(x, y - 1) && _pointMap[x, y - 1] == -1) setDistance(x, y - 1, step + 1);
             if (y < _maxY  && !IsBlocked(x, y + 1) && _pointMap[x, y + 1] == -1) setDistance(x, y + 1, step + 1);

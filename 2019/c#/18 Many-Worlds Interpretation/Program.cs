@@ -3,17 +3,18 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Threading.Tasks;
 using System.Xml.Linq;
 
 namespace _18_Many_Worlds_Interpretation
 {
     class Program
     {
-        public static int shortestFullPath = int.MaxValue;
-
+        public static int shortestFullPath = int.MaxValue; //I got this from an invalid answer. 2698 i too many steps.
+        public static Dictionary<string, int> visited = new Dictionary<string, int>();
         static void Main(string[] args)
         {
-            
+            Console.WriteLine(DateTime.Now.ToShortTimeString());
             var lines = File.ReadAllLines("data.txt");
             var maze = new Maze();
             maze.Init(lines);
@@ -26,8 +27,8 @@ namespace _18_Many_Worlds_Interpretation
 
             totalSteps = path.Sum(i => i.Steps);
             
-            //Console.WriteLine("totalSteps");
-            //Console.WriteLine(totalSteps);
+            Console.WriteLine("totalSteps");
+            Console.WriteLine(totalSteps);
 
             //Console.WriteLine(String.Join(",", path.Select(p => p.Name)));
         }
@@ -42,7 +43,35 @@ namespace _18_Many_Worlds_Interpretation
             var minPath = path;
             var keys = maze.FindAll(i => Char.IsLower(i[0])).Where(k => k.Steps > 0).ToList();
             var pathLength = path.Sum(i => i.Steps);
-            if(!keys.Any()){
+
+            if(pathLength > shortestFullPath) {
+                return (maze, path);
+            }
+
+            var collectedKeys = string.Join("", path.OrderBy(mi => mi.Name).Select(mi => mi.Name));
+            var curHashKey = current.X.ToString() + ":" + current.Y.ToString() + ":" + collectedKeys;
+            lock (visited)
+            {
+                if (visited.ContainsKey(curHashKey))
+                {
+                    var oldSteps = visited[curHashKey];
+                    if (oldSteps > pathLength)
+                    {
+                        visited[curHashKey] = pathLength;
+                    }
+                    else
+                    {
+                        path.Add(new MazeItem() { Steps = 100000, Name = "ö" });
+                        return (maze, path);
+                    }
+                }
+                else
+                {
+                    visited.Add(curHashKey, pathLength);
+                }
+            }
+
+            if (!keys.Any()){
                 if(pathLength < shortestFullPath){
                     shortestFullPath = pathLength;//
                     Console.WriteLine(shortestFullPath);
@@ -53,21 +82,27 @@ namespace _18_Many_Worlds_Interpretation
 
             //keys.Shuffle();
             keys = keys.OrderBy(k => k.Name).ToList();
-            foreach(var key in keys){
+            Parallel.ForEach(keys, key =>
+            //foreach(var key in keys)
+            {
                 int tmpSteps = 0;
                 var tmpMaze = maze.Clone();
                 var tmpPath = path.Select(item => item.Clone()).ToList();
                 tmpPath.Add(key);
 
+
                 (tmpSteps, tmpMaze) = GoToKey(key, tmpMaze);
 
-                 if(tmpPath.Sum(i => i.Steps) < shortestFullPath){
-                     minPath = tmpPath.Select(item => item.Clone()).ToList();;
-                     minMaze = tmpMaze.Clone();        
-                 }
                 (tmpMaze, tmpPath) = ShortestPath(tmpMaze, tmpPath);
-                
+
+                if (tmpPath.Sum(i => i.Steps) < shortestFullPath)
+                {
+                    minPath = tmpPath.Select(item => item.Clone()).ToList(); ;
+                    minMaze = tmpMaze.Clone();
+                }
+
             }
+            );
             return (minMaze, minPath);
             
             
