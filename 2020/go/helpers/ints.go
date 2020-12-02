@@ -65,3 +65,9 @@ func IntMax(a, b int) int {
 func IntBetween(p, a, b int) bool {
 	return p >= IntMin(a, b) && p <= IntMax(a, b)
 }
+
+//XorInts returns true if exactly one of a and b equals t
+func XorStrings(t, a, b int) bool {
+
+	return (t == a || t == b) && (a != b)
+}

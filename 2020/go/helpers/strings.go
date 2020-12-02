@@ -47,3 +47,9 @@ func SubString(input string, start int, length int) string {
 
 	return string(asRunes[start : start+length])
 }
+
+//XorString returns true if exactly one of a and b equals t
+func XorStrings(t, a, b string) bool {
+
+	return (t == a || t == b) && (a != b)
+}
