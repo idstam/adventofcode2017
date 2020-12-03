@@ -63,6 +63,7 @@ func BlitStringMatrix(small, large [][]string, x, y int) [][]string {
 
 	return large
 }
+
 func DumpStringMatrix(matrix [][]string, caption string) {
 	fmt.Println(caption + ":")
 	for _, line := range matrix {

@@ -67,7 +67,7 @@ func IntBetween(p, a, b int) bool {
 }
 
 //XorInts returns true if exactly one of a and b equals t
-func XorStrings(t, a, b int) bool {
+func XorInts(t, a, b int) bool {
 
 	return (t == a || t == b) && (a != b)
 }
