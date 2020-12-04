@@ -4,17 +4,14 @@ import (
 	"bufio"
 	"log"
 	"os"
+	"strings"
 )
 
 func StringToSlice(in string) []string {
-	ret := []string{}
-	for _, r := range in {
-		ret = append(ret, string(r))
-	}
-	return ret
+	return strings.Split(in, "")
 }
 
-func FileToLines(fileName string) []string {
+func FileToLines(fileName string, skipEmpty bool) []string {
 	ret := make([]string, 0, 100)
 
 	file, err := os.Open(fileName)
@@ -26,9 +23,10 @@ func FileToLines(fileName string) []string {
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
-		if line != "" {
-			ret = append(ret, line)
+		if line == "" && skipEmpty {
+			continue
 		}
+		ret = append(ret, line)
 	}
 
 	return ret
