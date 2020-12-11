@@ -1,6 +1,7 @@
 package helpers
 
 import (
+	"log"
 	"strconv"
 	"strings"
 )
@@ -70,4 +71,12 @@ func IntBetween(p, a, b int) bool {
 func XorInts(t, a, b int) bool {
 
 	return (t == a || t == b) && (a != b)
+}
+
+func Atoi(s string) int {
+	i, err := strconv.Atoi(s)
+	if err != nil {
+		log.Panicln("Not a valid int ", i, err)
+	}
+	return i
 }
