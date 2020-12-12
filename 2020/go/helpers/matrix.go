@@ -9,10 +9,14 @@ type StringMatrix struct {
 }
 
 func (m *StringMatrix) InitSquare(size int, def string) {
+	m.InitEmpty(size, size, def)
+}
+
+func (m *StringMatrix) InitEmpty(height, width int, def string) {
 	ret := [][]string{}
-	for y := 0; y < size; y++ {
+	for y := 0; y < width; y++ {
 		ret = append(ret, []string{})
-		for x := 0; x < size; x++ {
+		for x := 0; x < height; x++ {
 			ret[y] = append(ret[y], def)
 		}
 	}
@@ -20,27 +24,32 @@ func (m *StringMatrix) InitSquare(size int, def string) {
 }
 
 func (m *StringMatrix) InitFromLines(lines []string) {
+	width := 0
+	for _, line := range lines {
+		width = IntMax(width, len(line))
+	}
+
+	m.InitEmpty(len(lines), width, "")
 
 	for y, line := range lines {
 		l := StringToSlice(line)
-		m.Matrix = append(m.Matrix, []string{})
-		for _, p := range l {
-			m.Matrix[y] = append(m.Matrix[y], p)
+		for x, p := range l {
+			m.SafeSet(x, y, p)
 		}
 	}
 
 }
 
-func (m *StringMatrix) Clone() StringMatrix {
+func (m *StringMatrix) Clone(reuseMem bool) StringMatrix {
 	ret := StringMatrix{}
-	ret.Matrix = [][]string{}
-	for x := 0; x < m.Width(); x++ {
-		ret.Matrix = append(ret.Matrix, []string{})
+	ret.InitEmpty(m.Height(), m.Width(), "")
 
-		for y := 0; y < m.Height(); y++ {
-			ret.Matrix[x] = append(ret.Matrix[x], m.SafeGet(x, y, ""))
+	for y := 0; y < m.Height(); y++ {
+		for x := 0; x < m.Width(); x++ {
+			ret.Matrix[x][y] = m.Matrix[x][y]
 		}
 	}
+
 	return ret
 }
 func (m *StringMatrix) GetSubStringMatrix(x1, y1, blockSize int) [][]string {
@@ -98,14 +107,16 @@ func BlitStringMatrix(small, large [][]string, x, y int) [][]string {
 
 func (m *StringMatrix) Dump(caption string) {
 	fmt.Println(caption + ":")
-	for _, line := range m.Matrix {
+
+	for y := 0; y < m.Height(); y++ {
 		fmt.Print("|>")
-		for _, s := range line {
-			fmt.Print(s)
+		for x := 0; x < m.Width(); x++ {
+			fmt.Print(m.SafeGet(x, y, " "))
 		}
 		fmt.Println("<|")
 	}
 	fmt.Println("")
+
 }
 
 func (m *StringMatrix) Width() int {
@@ -114,27 +125,51 @@ func (m *StringMatrix) Width() int {
 
 func (m *StringMatrix) Height() int {
 
-	if m.Width() > 0 {
-		return len(m.Matrix[0])
+	return len(m.Matrix[0])
+}
+
+//Count returns how many occurances of neddle ther is in the matrix
+func (m *StringMatrix) Count(needle string) int {
+	occupiedCount := 0
+	for x := 0; x < m.Width(); x++ {
+		for y := 0; y < m.Height(); y++ {
+			p := m.SafeGet(x, y, needle+"XX")
+			if p == needle {
+				occupiedCount++
+			}
+		}
 	}
-	return 0
+
+	return occupiedCount
 }
 func (m *StringMatrix) CountAdjacent(x, y int, needle string) int {
 	ret := 0
-	vals := []string{}
-	vals = append(vals, m.SafeGet(x, y-1, ""))
-	vals = append(vals, m.SafeGet(x+1, y-1, ""))
-	vals = append(vals, m.SafeGet(x+1, y, ""))
-	vals = append(vals, m.SafeGet(x+1, y+1, ""))
-	vals = append(vals, m.SafeGet(x, y+1, ""))
-	vals = append(vals, m.SafeGet(x-1, y+1, ""))
-	vals = append(vals, m.SafeGet(x-1, y, ""))
-	vals = append(vals, m.SafeGet(x-1, y-1, ""))
 
-	for _, v := range vals {
-		if v == needle {
-			ret++
-		}
+	if m.SafeGet(x, y-1, "") == needle {
+		ret++
+	}
+	if m.SafeGet(x+1, y-1, "") == needle {
+		ret++
+	}
+
+	if m.SafeGet(x+1, y, "") == needle {
+		ret++
+	}
+	if m.SafeGet(x+1, y+1, "") == needle {
+		ret++
+	}
+	if m.SafeGet(x, y+1, "") == needle {
+		ret++
+	}
+	if m.SafeGet(x-1, y+1, "") == needle {
+		ret++
+	}
+	if m.SafeGet(x-1, y, "") == needle {
+		ret++
+	}
+
+	if m.SafeGet(x-1, y-1, "") == needle {
+		ret++
 	}
 	return ret
 }
@@ -161,4 +196,33 @@ func (m *StringMatrix) SafeSet(x, y int, val string) bool {
 
 	m.Matrix[x][y] = val
 	return true
+}
+
+func (m *StringMatrix) Look(x, y, dx, dy int) []string {
+	ret := []string{}
+	if dx == 0 && dy == 0 {
+		return ret
+	}
+
+	p := m.SafeGet(x+dx, y+dy, "")
+	if p != "" {
+		ret = append(ret, p)
+		ret = append(ret, m.Look(x+dx, y+dy, dx, dy)...)
+	}
+
+	return ret
+
+}
+
+func (p *Point) Rotate90(origin Point) {
+
+	tx := p.X - origin.X
+	ty := p.Y - origin.Y
+
+	tmpX := -ty
+	tmpY := tx
+
+	p.X = tmpX + origin.X
+	p.Y = tmpY + origin.Y
+
 }

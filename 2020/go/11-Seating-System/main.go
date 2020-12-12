@@ -15,7 +15,7 @@ func main() {
 	a := hlp.StringMatrix{}
 
 	a.InitFromLines(lines)
-	b := a.Clone()
+	b := a.Clone(false)
 
 	madeChange := true
 	iterations := 0
@@ -24,31 +24,68 @@ func main() {
 		madeChange = false
 		for x := 0; x < a.Width(); x++ {
 			for y := 0; y < a.Height(); y++ {
-				p := a.SafeGet(x, y, "")
+				p := a.Matrix[x][y]
 				c := a.CountAdjacent(x, y, "#")
 				if p == "L" && c == 0 {
 					madeChange = true
-					b.SafeSet(x, y, "#")
+					b.Matrix[x][y] = "#"
 				}
 				if p == "#" && c >= 4 {
 					madeChange = true
-					b.SafeSet(x, y, "L")
+					b.Matrix[x][y] = "L"
 				}
 			}
 		}
 		//b.Dump("")
-		a = b.Clone()
+		a = b.Clone(true)
 	}
-	occupiedCount := 0
 	fmt.Println("Part 1 Iterations", iterations)
-	for x := 0; x < a.Width(); x++ {
-		for y := 0; y < a.Height(); y++ {
-			p := a.SafeGet(x, y, "")
-			if p == "#" {
-				occupiedCount++
+	occupiedCount := a.Count("#")
+
+	fmt.Println("Part 1 Occupied", occupiedCount)
+
+	a = hlp.StringMatrix{}
+	a.InitFromLines(lines)
+	b = a.Clone(false)
+
+	madeChange = true
+	for madeChange {
+		madeChange = false
+		//a.Dump("")
+		for x := 0; x < a.Width(); x++ {
+			for y := 0; y < a.Height(); y++ {
+				p := a.Matrix[x][y]
+				c := 0
+				for dx := -1; dx < 2; dx++ {
+					for dy := -1; dy < 2; dy++ {
+						ray := a.Look(x, y, dx, dy)
+						for _, rp := range ray {
+							if rp == "L" {
+								break
+							}
+							if rp == "#" {
+								c++
+								break
+							}
+						}
+					}
+				}
+
+				if p == "L" && c == 0 {
+					madeChange = true
+					b.Matrix[x][y] = "#"
+				}
+				if p == "#" && c >= 5 {
+					madeChange = true
+					b.Matrix[x][y] = "L"
+				}
 			}
 		}
+		a = b.Clone(true)
 	}
-	fmt.Println("Part 1 Occupied", occupiedCount)
+
+	occupiedCount = a.Count("#")
+
+	fmt.Println("Part 2 Occupied", occupiedCount)
 
 }
