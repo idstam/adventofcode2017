@@ -10,6 +10,13 @@ import (
 func StringToSlice(in string) []string {
 	return strings.Split(in, "")
 }
+func SliceToString(in []string) string {
+	ret := ""
+	for _, s := range in {
+		ret += s
+	}
+	return ret
+}
 
 func FileToLines(fileName string, skipEmpty bool) []string {
 	ret := make([]string, 0, 100)
