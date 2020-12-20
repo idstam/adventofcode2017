@@ -7,6 +7,15 @@ import (
 	"strings"
 )
 
+func StringReverse(in string) string {
+	tmp := StringToSlice(in)
+	ret := ""
+
+	for i := len(tmp) - 1; i >= 0; i-- {
+		ret += tmp[i]
+	}
+	return ret
+}
 func StringToSlice(in string) []string {
 	return strings.Split(in, "")
 }
