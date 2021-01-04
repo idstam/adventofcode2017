@@ -63,6 +63,9 @@ func IntMax(a, b int) int {
 	}
 	return b
 }
+func IntMinMax(a, b int) (int, int) {
+	return IntMin(a, b), IntMax(a, b)
+}
 func IntBetween(p, a, b int) bool {
 	return p >= IntMin(a, b) && p <= IntMax(a, b)
 }

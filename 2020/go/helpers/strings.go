@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"bufio"
+	"encoding/json"
 	"log"
 	"os"
 	"strings"
@@ -66,4 +67,9 @@ func SubString(input string, start int, length int) string {
 func XorStrings(t, a, b string) bool {
 
 	return (t == a || t == b) && (a != b)
+}
+
+func PrettyPrint(i interface{}) string {
+	s, _ := json.MarshalIndent(i, "", "\t")
+	return string(s)
 }
