@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -72,4 +73,12 @@ func XorStrings(t, a, b string) bool {
 func PrettyPrint(i interface{}) string {
 	s, _ := json.MarshalIndent(i, "", "\t")
 	return string(s)
+}
+
+func StringIsInt(s string) bool {
+	_, err := strconv.Atoi(s)
+	if err != nil {
+		return false
+	}
+	return true
 }
